@@ -18,7 +18,7 @@ sys.path.insert(0, CURRENT_DIR)
 # requires using CMake directly.
 USER_OPTIONS = {
     # libxgboost options.
-    'use-openmp': (None, 'Build with OpenMP support.', 1),
+    'use-openmp': (None, 'Build with OpenMP support.', 0), # Sarus: we removed this to have it work on MacOS 11
     'use-cuda':   (None, 'Build with GPU acceleration.', 0),
     'use-nccl':   (None, 'Build with NCCL to enable distributed GPU support.', 0),
     'build-with-shared-nccl': (None, 'Build with shared NCCL library.', 0),
@@ -95,7 +95,7 @@ class CMakeExtension(Extension):  # pylint: disable=too-few-public-methods
 class BuildExt(build_ext.build_ext):  # pylint: disable=too-many-ancestors
     '''Custom build_ext command using CMake.'''
 
-    logger = logging.getLogger('XGBoost build_ext')
+    logger = logging.getLogger('DP-XGBoost build_ext')
 
     # pylint: disable=too-many-arguments,no-self-use
     def build(self, src_dir, build_dir, generator, build_tool=None, use_omp=1):
@@ -139,7 +139,7 @@ class BuildExt(build_ext.build_ext):  # pylint: disable=too-many-ancestors
             self.logger.info('Found shared library, skipping build.')
             return
 
-        src_dir = 'xgboost'
+        src_dir = 'dp_xgboost'
         try:
             copy_tree(os.path.join(CURRENT_DIR, os.path.pardir),
                       os.path.join(self.build_temp, src_dir))
@@ -195,11 +195,11 @@ class BuildExt(build_ext.build_ext):  # pylint: disable=too-many-ancestors
 
 class Sdist(sdist.sdist):       # pylint: disable=too-many-ancestors
     '''Copy c++ source into Python directory.'''
-    logger = logging.getLogger('xgboost sdist')
+    logger = logging.getLogger('dp-xgboost sdist')
 
     def run(self):
         copy_tree(os.path.join(CURRENT_DIR, os.path.pardir),
-                  os.path.join(CURRENT_DIR, 'xgboost'))
+                  os.path.join(CURRENT_DIR, 'dp_xgboost'))
         libxgboost = os.path.join(
             CURRENT_DIR, os.path.pardir, 'lib', lib_name())
         if os.path.exists(libxgboost):
@@ -212,7 +212,7 @@ class Sdist(sdist.sdist):       # pylint: disable=too-many-ancestors
 
 class InstallLib(install_lib.install_lib):
     '''Copy shared object into installation directory.'''
-    logger = logging.getLogger('xgboost install_lib')
+    logger = logging.getLogger('dp-xgboost install_lib')
 
     def install(self):
         outfiles = super().install()
@@ -225,16 +225,16 @@ class InstallLib(install_lib.install_lib):
             assert os.path.exists(os.path.join(lib_path, lib_name())), msg
             return []
 
-        lib_dir = os.path.join(self.install_dir, 'xgboost', 'lib')
+        lib_dir = os.path.join(self.install_dir, 'dp_xgboost', 'lib')
         if not os.path.exists(lib_dir):
             os.mkdir(lib_dir)
-        dst = os.path.join(self.install_dir, 'xgboost', 'lib', lib_name())
+        dst = os.path.join(self.install_dir, 'dp_xgboost', 'lib', lib_name())
 
         global BUILD_TEMP_DIR   # pylint: disable=global-statement
         libxgboost_path = lib_name()
 
         dft_lib_dir = os.path.join(CURRENT_DIR, os.path.pardir, 'lib')
-        build_dir = os.path.join(BUILD_TEMP_DIR, 'xgboost', 'lib')
+        build_dir = os.path.join(BUILD_TEMP_DIR, 'dp_xgboost', 'lib')
 
         if os.path.exists(os.path.join(dft_lib_dir, libxgboost_path)):
             # The library is built by CMake directly
@@ -249,7 +249,7 @@ class InstallLib(install_lib.install_lib):
 
 
 class Install(install.install):  # pylint: disable=too-many-instance-attributes
-    '''An interface to install command, accepting XGBoost specific
+    '''An interface to install command, accepting DP-XGBoost specific
     arguments.
 
     '''
@@ -287,8 +287,8 @@ class Install(install.install):  # pylint: disable=too-many-instance-attributes
 if __name__ == '__main__':
     # Supported commands:
     # From internet:
-    # - pip install xgboost
-    # - pip install --no-binary :all: xgboost
+    # - pip install dp-xgboost
+    # - pip install --no-binary :all: dp-xgboost
 
     # From source tree `xgboost/python-package`:
     # - python setup.py build
@@ -301,10 +301,10 @@ if __name__ == '__main__':
     # - pip install . -e
     # - python setup.py develop   # same as above
     logging.basicConfig(level=logging.INFO)
-    setup(name='xgboost',
+    setup(name='dp-xgboost',
           version=open(os.path.join(
-              CURRENT_DIR, 'xgboost/VERSION')).read().strip(),
-          description="XGBoost Python Package",
+              CURRENT_DIR, 'dp_xgboost/VERSION')).read().strip(),
+          description="DP-XGBoost Python Package from Sarus",
           long_description=open(os.path.join(CURRENT_DIR, 'README.rst'),
                                 encoding='utf-8').read(),
           long_description_content_type="text/x-rst",
@@ -326,8 +326,8 @@ if __name__ == '__main__':
               'datatable': ['datatable'],
               'plotting': ['graphviz', 'matplotlib']
           },
-          maintainer='Hyunsu Cho',
-          maintainer_email='chohyu01@cs.washington.edu',
+          maintainer='Nicolas Grislain',
+          maintainer_email='ng@sarus.tech',
           zip_safe=False,
           packages=find_packages(),
           include_package_data=True,
@@ -341,6 +341,6 @@ if __name__ == '__main__':
                        'Programming Language :: Python :: 3.7',
                        'Programming Language :: Python :: 3.8'],
           python_requires='>=3.6',
-          url='https://github.com/dmlc/xgboost')
+          url='https://github.com/sarus-tech/dp-xgboost')
 
     clean_up()

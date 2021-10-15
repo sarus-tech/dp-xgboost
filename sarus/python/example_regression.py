@@ -1,4 +1,4 @@
-import xgboost as xgb 
+import dp_xgboost as xgb 
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_regression

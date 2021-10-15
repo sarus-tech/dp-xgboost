@@ -1,54 +1,54 @@
 include README.rst
-include xgboost/LICENSE
-include xgboost/VERSION
-include xgboost/CMakeLists.txt
+include dp_xgboost/LICENSE
+include dp_xgboost/VERSION
+include dp_xgboost/CMakeLists.txt
 
-include xgboost/py.typed
-recursive-include xgboost *.py
-recursive-include xgboost/cmake *
-exclude xgboost/cmake/RPackageInstall.cmake.in
-exclude xgboost/cmake/RPackageInstallTargetSetup.cmake
-exclude xgboost/cmake/Sanitizer.cmake
-exclude xgboost/cmake/modules/FindASan.cmake
-exclude xgboost/cmake/modules/FindLSan.cmake
-exclude xgboost/cmake/modules/FindLibR.cmake
-exclude xgboost/cmake/modules/FindTSan.cmake
-exclude xgboost/cmake/modules/FindUBSan.cmake
-recursive-include xgboost/include *
-recursive-include xgboost/plugin *
-recursive-include xgboost/src *
+include dp_xgboost/py.typed
+recursive-include dp_xgboost *.py
+recursive-include dp_xgboost/cmake *
+exclude dp_xgboost/cmake/RPackageInstall.cmake.in
+exclude dp_xgboost/cmake/RPackageInstallTargetSetup.cmake
+exclude dp_xgboost/cmake/Sanitizer.cmake
+exclude dp_xgboost/cmake/modules/FindASan.cmake
+exclude dp_xgboost/cmake/modules/FindLSan.cmake
+exclude dp_xgboost/cmake/modules/FindLibR.cmake
+exclude dp_xgboost/cmake/modules/FindTSan.cmake
+exclude dp_xgboost/cmake/modules/FindUBSan.cmake
+recursive-include dp_xgboost/include *
+recursive-include dp_xgboost/plugin *
+recursive-include dp_xgboost/src *
 
-include xgboost/rabit/CMakeLists.txt
-recursive-include xgboost/rabit/include *
-recursive-include xgboost/rabit/src *
-prune xgboost/rabit/doc
-prune xgboost/rabit/guide
+include dp_xgboost/rabit/CMakeLists.txt
+recursive-include dp_xgboost/rabit/include *
+recursive-include dp_xgboost/rabit/src *
+prune dp_xgboost/rabit/doc
+prune dp_xgboost/rabit/guide
 
-include xgboost/dmlc-core/CMakeLists.txt
+include dp_xgboost/dmlc-core/CMakeLists.txt
 
-recursive-include xgboost/dmlc-core/cmake *
-exclude xgboost/dmlc-core/cmake/gtest_cmake.in
-exclude xgboost/dmlc-core/cmake/lint.cmake
-exclude xgboost/dmlc-core/cmake/Sanitizer.cmake
-exclude xgboost/dmlc-core/cmake/Modules/FindASan.cmake
-exclude xgboost/dmlc-core/cmake/Modules/FindLSan.cmake
-exclude xgboost/dmlc-core/cmake/Modules/FindTSan.cmake
-exclude xgboost/dmlc-core/cmake/Modules/FindUBSan.cmake
+recursive-include dp_xgboost/dmlc-core/cmake *
+exclude dp_xgboost/dmlc-core/cmake/gtest_cmake.in
+exclude dp_xgboost/dmlc-core/cmake/lint.cmake
+exclude dp_xgboost/dmlc-core/cmake/Sanitizer.cmake
+exclude dp_xgboost/dmlc-core/cmake/Modules/FindASan.cmake
+exclude dp_xgboost/dmlc-core/cmake/Modules/FindLSan.cmake
+exclude dp_xgboost/dmlc-core/cmake/Modules/FindTSan.cmake
+exclude dp_xgboost/dmlc-core/cmake/Modules/FindUBSan.cmake
 
-recursive-include xgboost/dmlc-core/include *
-recursive-include xgboost/dmlc-core/include *
-recursive-include xgboost/dmlc-core/make *
-recursive-include xgboost/dmlc-core/src *
-include xgboost/dmlc-core/tracker/dmlc-submit
-recursive-include xgboost/dmlc-core/tracker/dmlc_tracker *.py
-include xgboost/dmlc-core/tracker/yarn/build.bat
-include xgboost/dmlc-core/tracker/yarn/build.sh
-include xgboost/dmlc-core/tracker/yarn/pom.xml
-recursive-include xgboost/dmlc-core/tracker/yarn/src *
-include xgboost/dmlc-core/windows/dmlc.sln
-include xgboost/dmlc-core/windows/dmlc/dmlc.vcxproj
+recursive-include dp_xgboost/dmlc-core/include *
+recursive-include dp_xgboost/dmlc-core/include *
+recursive-include dp_xgboost/dmlc-core/make *
+recursive-include dp_xgboost/dmlc-core/src *
+include dp_xgboost/dmlc-core/tracker/dmlc-submit
+recursive-include dp_xgboost/dmlc-core/tracker/dmlc_tracker *.py
+include dp_xgboost/dmlc-core/tracker/yarn/build.bat
+include dp_xgboost/dmlc-core/tracker/yarn/build.sh
+include dp_xgboost/dmlc-core/tracker/yarn/pom.xml
+recursive-include dp_xgboost/dmlc-core/tracker/yarn/src *
+include dp_xgboost/dmlc-core/windows/dmlc.sln
+include dp_xgboost/dmlc-core/windows/dmlc/dmlc.vcxproj
 
-prune xgboost/dmlc-core/doc
-prune xgboost/dmlc-core/scripts/
+prune dp_xgboost/dmlc-core/doc
+prune dp_xgboost/dmlc-core/scripts/
 
 global-exclude *.py[oc]
