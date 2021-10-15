@@ -183,6 +183,15 @@ public class DMatrix {
   public void setLabel(float[] labels) throws XGBoostError {
     XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixSetFloatInfo(handle, "label", labels));
   }
+  /**
+   * set feature bounds for differentially private DMatrix
+   * @param fmin features DP min values
+   * @param fmax features DP max values
+   */
+  public void setFeatureBounds(float[] fmin, float[] fmax) throws XGBoostError {
+    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixSetFloatInfo(handle, "feature_min", fmin));
+    XGBoostJNI.checkCall(XGBoostJNI.XGDMatrixSetFloatInfo(handle, "feature_max", fmax));
+  }
 
   /**
    * set weight of each instance

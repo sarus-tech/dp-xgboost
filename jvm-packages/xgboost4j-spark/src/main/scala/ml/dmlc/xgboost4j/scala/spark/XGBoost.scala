@@ -176,7 +176,8 @@ private[this] class XGBoostExecutionParamsFactory(rawParams: Map[String, Any], s
       require(overridedParams("tree_method") == "hist" ||
         overridedParams("tree_method") == "approx" ||
         overridedParams("tree_method") == "auto" ||
-        overridedParams("tree_method") == "gpu_hist", "xgboost4j-spark only supports tree_method" +
+        overridedParams("tree_method") == "gpu_hist" ||
+        overridedParams("tree_method") == "approxDP", "xgboost4j-spark only supports tree_method" +
         " as 'hist', 'approx', 'gpu_hist', and 'auto'")
       treeMethod = Some(overridedParams("tree_method").asInstanceOf[String])
     }
@@ -488,13 +489,15 @@ object XGBoost extends Serializable {
       xgbExecutionParams: XGBoostExecutionParams,
       rabitEnv: java.util.Map[String, String],
       prevBooster: Booster,
-      evalSetsMap: Map[String, RDD[XGBLabeledPoint]]): RDD[(Booster, Map[String, Array[Float]])] = {
+      evalSetsMap: Map[String, RDD[XGBLabeledPoint]],
+      featureMin: Array[Float],
+      featureMax: Array[Float]): RDD[(Booster, Map[String, Array[Float]])] = {
     if (evalSetsMap.isEmpty) {
       trainingData.mapPartitions(labeledPoints => {
         val watches = Watches.buildWatches(xgbExecutionParams,
           processMissingValues(labeledPoints, xgbExecutionParams.missing,
             xgbExecutionParams.allowNonZeroForMissing),
-          getCacheDirName(xgbExecutionParams.useExternalMemory))
+          getCacheDirName(xgbExecutionParams.useExternalMemory), featureMin, featureMax)
         buildDistributedBooster(watches, xgbExecutionParams, rabitEnv, xgbExecutionParams.obj,
           xgbExecutionParams.eval, prevBooster)
       }).cache()
@@ -507,7 +510,7 @@ object XGBoost extends Serializable {
                 case (name, iter) => (name, processMissingValues(iter,
                   xgbExecutionParams.missing, xgbExecutionParams.allowNonZeroForMissing))
               },
-              getCacheDirName(xgbExecutionParams.useExternalMemory))
+              getCacheDirName(xgbExecutionParams.useExternalMemory), featureMin, featureMax)
             buildDistributedBooster(watches, xgbExecutionParams, rabitEnv, xgbExecutionParams.obj,
               xgbExecutionParams.eval, prevBooster)
         }.cache()
@@ -565,6 +568,8 @@ object XGBoost extends Serializable {
   }
 
   /**
+   * @param featureMin feature min values for DP learning only
+   * @param featureMax feature max values for DP learning only
    * @return A tuple of the booster and the metrics used to build training summary
    */
   @throws(classOf[XGBoostError])
@@ -572,7 +577,9 @@ object XGBoost extends Serializable {
       trainingData: RDD[XGBLabeledPoint],
       params: Map[String, Any],
       hasGroup: Boolean = false,
-      evalSetsMap: Map[String, RDD[XGBLabeledPoint]] = Map()):
+      evalSetsMap: Map[String, RDD[XGBLabeledPoint]] = Map(),
+      featureMin: Array[Float] = Array[Float](),
+      featureMax: Array[Float] = Array[Float]()):
     (Booster, Map[String, Array[Float]]) = {
     logger.info(s"Running XGBoost ${spark.VERSION} with parameters:\n${params.mkString("\n")}")
     val xgbParamsFactory = new XGBoostExecutionParamsFactory(params, trainingData.sparkContext)
@@ -604,7 +611,7 @@ object XGBoost extends Serializable {
             evalSetsMap)
         } else {
           trainForNonRanking(transformedTrainingData.right.get, xgbExecParams, rabitEnv,
-            prevBooster, evalSetsMap)
+            prevBooster, evalSetsMap, featureMin, featureMax)
         }
         val sparkJobThread = new Thread() {
           override def run() {
@@ -802,7 +809,9 @@ private object Watches {
 
   def buildWatches(
       nameAndLabeledPointSets: Iterator[(String, Iterator[XGBLabeledPoint])],
-      cachedDirName: Option[String]): Watches = {
+      cachedDirName: Option[String],
+      featureMin: Array[Float],
+      featureMax: Array[Float]): Watches = {
     val dms = nameAndLabeledPointSets.map {
       case (name, labeledPoints) =>
         val baseMargins = new mutable.ArrayBuilder.ofFloat
@@ -811,6 +820,7 @@ private object Watches {
           labeledPoint
         })
         val dMatrix = new DMatrix(duplicatedItr, cachedDirName.map(_ + s"/$name").orNull)
+        dMatrix.setFeatureBounds(featureMin, featureMax)
         val baseMargin = fromBaseMarginsToArray(baseMargins.result().iterator)
         if (baseMargin.isDefined) {
           dMatrix.setBaseMargin(baseMargin.get)
@@ -823,7 +833,9 @@ private object Watches {
   def buildWatches(
       xgbExecutionParams: XGBoostExecutionParams,
       labeledPoints: Iterator[XGBLabeledPoint],
-      cacheDirName: Option[String]): Watches = {
+      cacheDirName: Option[String],
+      featureMin: Array[Float],
+      featureMax: Array[Float]): Watches = {
     val trainTestRatio = xgbExecutionParams.xgbInputParams.trainTestRatio
     val seed = xgbExecutionParams.xgbInputParams.seed
     val r = new Random(seed)
@@ -842,6 +854,9 @@ private object Watches {
     }
     val trainMatrix = new DMatrix(trainPoints, cacheDirName.map(_ + "/train").orNull)
     val testMatrix = new DMatrix(testPoints.iterator, cacheDirName.map(_ + "/test").orNull)
+
+    trainMatrix.setFeatureBounds(featureMin, featureMax)
+    testMatrix.setFeatureBounds(featureMin, featureMax)
 
     val trainMargin = fromBaseMarginsToArray(trainBaseMargins.result().iterator)
     val testMargin = fromBaseMarginsToArray(testBaseMargins.result().iterator)

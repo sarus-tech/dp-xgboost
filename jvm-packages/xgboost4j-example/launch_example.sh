@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh 
+
+java -cp /Users/joan/.m2/repository/com/esotericsoftware/kryo/4.0.2/kryo-4.0.2.jar:target/xgboost4j-example_2.12-1.5.0-SNAPSHOT.jar:../xgboost4j/target/xgboost4j_2.12-1.5.0-SNAPSHOT.jar:/Users/joan/.m2/repository/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar:/Users/joan/.m2/repository/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar ml.dmlc.xgboost4j.java.example.BasicWalkThrough

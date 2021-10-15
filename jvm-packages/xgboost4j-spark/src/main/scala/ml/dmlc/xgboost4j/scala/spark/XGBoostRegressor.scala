@@ -47,6 +47,9 @@ class XGBoostRegressor (
   extends Predictor[Vector, XGBoostRegressor, XGBoostRegressionModel]
     with XGBoostRegressorParams with DefaultParamsWritable {
 
+  var fmin = Array[Float]()
+  var fmax = Array[Float]()
+
   def this() = this(Identifiable.randomUID("xgbr"), Map[String, Any]())
 
   def this(uid: String) = this(uid, Map[String, Any]())
@@ -163,6 +166,12 @@ class XGBoostRegressor (
     }
   }
 
+  def setFeatureBounds(featureMin: Array[Float], featureMax: Array[Float]): this.type = {
+    fmin = featureMin
+    fmax = featureMax
+    this
+  }
+
   override protected def train(dataset: Dataset[_]): XGBoostRegressionModel = {
 
     if (!isDefined(evalMetric) || $(evalMetric).isEmpty) {
@@ -193,7 +202,7 @@ class XGBoostRegressor (
     val derivedXGBParamMap = MLlib2XGBoostParams
     // All non-null param maps in XGBoostRegressor are in derivedXGBParamMap.
     val (_booster, _metrics) = XGBoost.trainDistributed(trainingSet, derivedXGBParamMap,
-      hasGroup = group != lit(-1), evalRDDMap)
+      hasGroup = group != lit(-1), evalRDDMap, fmin, fmax)
     val model = new XGBoostRegressionModel(uid, _booster)
     val summary = XGBoostTrainingSummary(_metrics)
     model.setSummary(summary)

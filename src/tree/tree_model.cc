@@ -9,6 +9,7 @@
 #include <xgboost/tree_model.h>
 #include <xgboost/logging.h>
 #include <xgboost/json.h>
+#include <xgboost/mechanisms.h>
 
 #include <sstream>
 #include <limits>
@@ -953,6 +954,28 @@ void RegTree::LoadModel(Json const& in) {
   }
   CHECK_EQ(static_cast<bst_node_t>(deleted_nodes_.size()), param.num_deleted);
   CHECK_EQ(this->split_categories_segments_.size(), param.num_nodes);
+
+  // Loads the privacy logs
+
+  auto dp_logs_json = get<Array>(in["privacy_logs"]);
+  for(auto mech_json : dp_logs_json) {
+    auto epsilon = get<Number>(mech_json["epsilon"]);
+    int mech_type;
+    auto type = get<String>(mech_json["type"]);
+
+    if(type ==  "Laplace")
+        mech_type = DP_LAPLACE_MECH;
+    if(type == "Histogram")
+        mech_type = DP_HISTOGRAM_MECH;
+    if(type ==  "Exponential")
+        mech_type = DP_EXPONENTIAL_MECH;
+
+    DPMechanism mech;
+    mech.epsilon = epsilon;
+    mech.mech_type = mech_type;
+
+    dp_logs.push_back(mech);
+  }
 }
 
 void RegTree::SaveModel(Json* p_out) const {
@@ -1015,6 +1038,30 @@ void RegTree::SaveModel(Json* p_out) const {
   out["split_indices"] = std::move(indices);
   out["split_conditions"] = std::move(conds);
   out["default_left"] = std::move(default_left);
+
+  // save DP Logs
+
+  std::vector<Json> dp_mechanisms;
+  for(auto mech : dp_logs) {
+    JsonObject mech_json; 
+    
+    std::string mechtype_str = "";
+    switch(mech.mech_type) {
+      case DP_LAPLACE_MECH:
+        mech_json["type"] = static_cast<JsonString>("Laplace");
+        break;
+      case DP_HISTOGRAM_MECH:
+        mech_json["type"] = static_cast<JsonString>("Histogram");
+        break;
+      case DP_EXPONENTIAL_MECH:
+        mech_json["type"] = static_cast<JsonString>("Exponential");
+        break;
+    }
+    mech_json["epsilon"] = static_cast<JsonNumber>(mech.epsilon); 
+    dp_mechanisms.push_back(static_cast<Json>(std::move(mech_json))); 
+  }
+
+  out["privacy_logs"] = std::move(dp_mechanisms);
 }
 
 void RegTree::FillNodeMeanValues() {

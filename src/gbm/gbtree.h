@@ -33,7 +33,7 @@
 namespace xgboost {
 enum class TreeMethod : int {
   kAuto = 0, kApprox = 1, kExact = 2, kHist = 3,
-  kGPUHist = 5
+  kGPUHist = 5, kApproxDP = 6
 };
 
 // boosting process types
@@ -103,6 +103,7 @@ struct GBTreeTrainParam : public XGBoostParameter<GBTreeTrainParam> {
         .add_enum("exact",     TreeMethod::kExact)
         .add_enum("hist",      TreeMethod::kHist)
         .add_enum("gpu_hist",  TreeMethod::kGPUHist)
+        .add_enum("approxDP",  TreeMethod::kApproxDP)
         .describe("Choice of tree construction method.");
   }
 };

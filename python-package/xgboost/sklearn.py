@@ -640,7 +640,7 @@ class XGBModel(XGBModelBase):
         sample_weight_eval_set: Optional[List[array_like]] = None,
         base_margin_eval_set: Optional[List[array_like]] = None,
         feature_weights: Optional[array_like] = None,
-        callbacks: Optional[List[TrainingCallback]] = None
+        callbacks: Optional[List[TrainingCallback]] = None,
     ) -> "XGBModel":
         # pylint: disable=invalid-name,attribute-defined-outside-init
         """Fit gradient boosting model.

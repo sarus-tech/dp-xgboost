@@ -550,7 +550,6 @@ def _convert_unknown_data(data):
 
     return data
 
-
 def dispatch_data_backend(data, missing, threads,
                           feature_names, feature_types,
                           enable_categorical=False):

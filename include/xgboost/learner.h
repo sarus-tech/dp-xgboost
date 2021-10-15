@@ -234,7 +234,6 @@ class Learner : public Model, public Configurable, public dmlc::Serializable {
    * \param fn Output feature types
    */
   virtual void GetFeatureTypes(std::vector<std::string>* ft) const = 0;
-
   /*!
    * \return whether the model allow lazy checkpoint in rabit.
    */

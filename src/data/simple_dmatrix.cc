@@ -100,7 +100,6 @@ SimpleDMatrix::SimpleDMatrix(AdapterT* adapter, float missing, int nthread) {
   uint64_t inferred_num_columns = 0;
   uint64_t total_batch_size = 0;
     // batch_size is either number of rows or cols, depending on data layout
-
   adapter->BeforeFirst();
   // Iterate over batches of input data
   while (adapter->Next()) {
