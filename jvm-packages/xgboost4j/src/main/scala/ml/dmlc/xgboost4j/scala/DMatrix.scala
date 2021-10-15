@@ -108,6 +108,16 @@ class DMatrix private[scala](private[scala] val jDMatrix: JDMatrix) {
   }
 
   /**
+   * set feature bounds for Sarus DP DMatrix
+   * @param fmin features DP min values
+   * @param fmax features DP max values
+   */
+  @throws(classOf[XGBoostError])
+  def setFeatureBounds(fmin: Array[Float], fmax: Array[Float]): Unit = {
+    jDMatrix.setFeatureBounds(fmin, fmax)
+  }
+
+  /**
    * set weight of each instance
    *
    * @param weights weights

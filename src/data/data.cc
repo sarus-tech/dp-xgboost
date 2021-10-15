@@ -413,6 +413,18 @@ void MetaInfo::SetInfo(const char* key, const void* dptr, DataType dtype, size_t
     labels.resize(num);
     DISPATCH_CONST_PTR(dtype, dptr, cast_dptr,
                        std::copy(cast_dptr, cast_dptr + num, labels.begin()));
+  } else if(!std::strcmp(key, "feature_min")) {
+    auto& bounds = feature_min.HostVector(); 
+    bounds.resize(num); 
+    DISPATCH_CONST_PTR(
+        dtype, dptr, cast_dptr,
+        std::copy(cast_dptr, cast_dptr + num, bounds.begin()));
+  } else if(!std::strcmp(key, "feature_max")) {
+    auto& bounds = feature_max.HostVector(); 
+    bounds.resize(num); 
+    DISPATCH_CONST_PTR(
+        dtype, dptr, cast_dptr,
+        std::copy(cast_dptr, cast_dptr + num, bounds.begin()));
   } else if (!std::strcmp(key, "feature_weights")) {
     auto &h_feature_weights = feature_weigths.HostVector();
     h_feature_weights.resize(num);
@@ -442,6 +454,10 @@ void MetaInfo::GetInfo(char const *key, bst_ulong *out_len, DataType dtype,
       vec = &this->labels_lower_bound_.HostVector();
     } else if (!std::strcmp(key, "label_upper_bound")) {
       vec = &this->labels_upper_bound_.HostVector();
+    } else if(!std::strcmp(key, "feature_min")) {
+      vec = &this->feature_min.HostVector(); 
+    } else if(!std::strcmp(key, "feature_max")) {
+      vec = &this->feature_max.HostVector(); 
     } else if (!std::strcmp(key, "feature_weights")) {
       vec = &this->feature_weigths.HostVector();
     } else {

@@ -8,3 +8,9 @@
 [submodule "gputreeshap"]
 	path = gputreeshap
 	url = https://github.com/rapidsai/gputreeshap.git
+[submodule "differential-privacy"]
+	path = differential-privacy
+	url = https://github.com/google/differential-privacy.git
+[submodule "xgboost-operator"]
+	path = xgboost-operator
+	url = https://github.com/kubeflow/xgboost-operator

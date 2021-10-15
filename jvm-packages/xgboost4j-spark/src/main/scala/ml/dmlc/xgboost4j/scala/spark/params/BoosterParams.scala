@@ -248,7 +248,12 @@ private[spark] trait BoosterParams extends Params {
     (value: Double) => value >= 0 && value <= 1)
 
   final def getSkipDrop: Double = $(skipDrop)
-
+  /**
+    * DP param epsilon budget per tree
+    */
+  final val dp_epsilon_per_tree = new DoubleParam(this, "dpEpsilonPerTree",
+    "privacy budget per tree", (value: Double) => value > 0)
+  final def getDPBudgetPerTree: Double = $(dp_epsilon_per_tree)
   // linear booster
   /**
    * Parameter of linear booster
@@ -286,14 +291,15 @@ private[spark] trait BoosterParams extends Params {
     subsample -> 1, colsampleBytree -> 1, colsampleBylevel -> 1,
     lambda -> 1, alpha -> 0, treeMethod -> "auto", sketchEps -> 0.03,
     scalePosWeight -> 1.0, sampleType -> "uniform", normalizeType -> "tree",
-    rateDrop -> 0.0, skipDrop -> 0.0, lambdaBias -> 0, treeLimit -> 0)
+    rateDrop -> 0.0, skipDrop -> 0.0, lambdaBias -> 0, treeLimit -> 0,
+    dp_epsilon_per_tree -> 1.0)
 }
 
 private[spark] object BoosterParams {
 
   val supportedBoosters = HashSet("gbtree", "gblinear", "dart")
 
-  val supportedTreeMethods = HashSet("auto", "exact", "approx", "hist", "gpu_hist")
+  val supportedTreeMethods = HashSet("auto", "exact", "approx", "hist", "gpu_hist", "approxDP")
 
   val supportedGrowthPolicies = HashSet("depthwise", "lossguide")
 

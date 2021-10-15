@@ -608,6 +608,7 @@ class LearnerConfiguration : public Learner {
                                          &learner_model_param_));
     }
     gbm_->Configure(args);
+
   }
 
   void ConfigureObjective(LearnerTrainParam const& old, Args* p_args) {

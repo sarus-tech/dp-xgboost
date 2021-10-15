@@ -92,6 +92,9 @@ struct TrainParam : public XGBoostParameter<TrainParam> {
   // will be considered. If set to zero, ALL existing groups will be examined
   unsigned max_search_group;
 
+  // differential privacy budget per tree 
+  double dp_epsilon_per_tree; 
+  
   // declare the parameters
   DMLC_DECLARE_PARAMETER(TrainParam) {
     DMLC_DECLARE_FIELD(learning_rate)
@@ -212,7 +215,9 @@ struct TrainParam : public XGBoostParameter<TrainParam> {
                   "groups before creating a new group for that feature; to save time, "
                   "only up to (max_search_group) of existing groups will be "
                   "considered. If set to zero, ALL existing groups will be examined.");
-
+                  
+    DMLC_DECLARE_FIELD(dp_epsilon_per_tree).set_lower_bound(0).set_default(1.0)
+        .describe("Differential Privacy epsilon budget per tree");
     // add alias of parameters
     DMLC_DECLARE_ALIAS(reg_lambda, lambda);
     DMLC_DECLARE_ALIAS(reg_alpha, alpha);

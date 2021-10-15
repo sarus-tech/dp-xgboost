@@ -84,6 +84,10 @@ class TreeUpdater : public Configurable {
    * \param tparam A global runtime parameter
    */
   static TreeUpdater* Create(const std::string& name, GenericParameter const* tparam);
+
+  // For the DP tree updater
+  virtual void SetGradientFiltering(float) {}; 
+  virtual void SetBoostingRound(int) {};
 };
 
 /*!

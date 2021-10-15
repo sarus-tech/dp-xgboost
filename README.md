@@ -1,76 +1,60 @@
-<<<<<<< HEAD
-# Sarus XGBoost
+Don't forget to `git submodule init` and `git submodule update` after cloning this repo to initialize the XGBoost submodules (e.g. dmlc). 
 
-Run private XGBoost jobs
-=======
-<img src=https://raw.githubusercontent.com/dmlc/dmlc.github.io/master/img/logo-m/xgboost.png width=135/>  eXtreme Gradient Boosting
-===========
-[![Build Status](https://xgboost-ci.net/job/xgboost/job/master/badge/icon)](https://xgboost-ci.net/blue/organizations/jenkins/xgboost/activity)
-[![Build Status](https://img.shields.io/travis/dmlc/xgboost.svg?label=build&logo=travis&branch=master)](https://travis-ci.org/dmlc/xgboost)
-[![Build Status](https://ci.appveyor.com/api/projects/status/5ypa8vaed6kpmli8?svg=true)](https://ci.appveyor.com/project/tqchen/xgboost)
-[![XGBoost-CI](https://github.com/dmlc/xgboost/workflows/XGBoost-CI/badge.svg?branch=master)](https://github.com/dmlc/xgboost/actions)
-[![Documentation Status](https://readthedocs.org/projects/xgboost/badge/?version=latest)](https://xgboost.readthedocs.org)
-[![GitHub license](http://dmlc.github.io/img/apache2.svg)](./LICENSE)
-[![CRAN Status Badge](http://www.r-pkg.org/badges/version/xgboost)](http://cran.r-project.org/web/packages/xgboost)
-[![PyPI version](https://badge.fury.io/py/xgboost.svg)](https://pypi.python.org/pypi/xgboost/)
-[![Conda version](https://img.shields.io/conda/vn/conda-forge/py-xgboost.svg)](https://anaconda.org/conda-forge/py-xgboost)
-[![Optuna](https://img.shields.io/badge/Optuna-integrated-blue)](https://optuna.org)
-[![Twitter](https://img.shields.io/badge/@XGBoostProject--_.svg?style=social&logo=twitter)](https://twitter.com/XGBoostProject)
+# What is Sarus XGBoost 
 
-[Community](https://xgboost.ai/community) |
-[Documentation](https://xgboost.readthedocs.org) |
-[Resources](demo/README.md) |
-[Contributors](CONTRIBUTORS.md) |
-[Release Notes](NEWS.md)
+This is a fork of XGBoost (https://github.com/dmlc/xgboost/tree/master/) that aims at adding differential-privacy to gradient boosted trees. A detailed explanation of the theory and methods used can be found under `doc/sarus`. 
 
-XGBoost is an optimized distributed gradient boosting library designed to be highly ***efficient***, ***flexible*** and ***portable***.
-It implements machine learning algorithms under the [Gradient Boosting](https://en.wikipedia.org/wiki/Gradient_boosting) framework.
-XGBoost provides a parallel tree boosting (also known as GBDT, GBM) that solve many data science problems in a fast and accurate way.
-The same code runs on major distributed environment (Kubernetes, Hadoop, SGE, MPI, Dask) and can solve problems beyond billions of examples.
+# Installing Sarus XGBoost 
 
-License
--------
-© Contributors, 2019. Licensed under an [Apache-2](https://github.com/dmlc/xgboost/blob/master/LICENSE) license.
+Build tools needed: `cmake`, `g++` and `libomp` which can be installed with `brew` or your favourite package manager. The following commands will setup the build config:
 
-Contribute to XGBoost
----------------------
-XGBoost has been developed and used by a group of active community members. Your help is very valuable to make the package better for everyone.
-Checkout the [Community Page](https://xgboost.ai/community).
+`mkdir build`
 
-Reference
----------
-- Tianqi Chen and Carlos Guestrin. [XGBoost: A Scalable Tree Boosting System](http://arxiv.org/abs/1603.02754). In 22nd SIGKDD Conference on Knowledge Discovery and Data Mining, 2016
-- XGBoost originates from research project at University of Washington.
+`cd build`
 
-Sponsors
---------
-Become a sponsor and get a logo here. See details at [Sponsoring the XGBoost Project](https://xgboost.ai/sponsors). The funds are used to defray the cost of continuous integration and testing infrastructure (https://xgboost-ci.net).
+`cmake ..`
 
-## Open Source Collective sponsors
-[![Backers on Open Collective](https://opencollective.com/xgboost/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/xgboost/sponsors/badge.svg)](#sponsors)
+After this we can build the shared library and the python package by executing the `sarus/install.sh` script on Mac. Or runnning:
+`make -j4; cd ../python-package ; python -m pip install -e .`
 
-### Sponsors
-[[Become a sponsor](https://opencollective.com/xgboost#sponsor)]
+# Usage 
 
-<!--<a href="https://opencollective.com/xgboost/sponsor/0/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/0/avatar.svg"></a>-->
-<a href="https://www.nvidia.com/en-us/" target="_blank"><img src="https://raw.githubusercontent.com/xgboost-ai/xgboost-ai.github.io/master/images/sponsors/nvidia.jpg" alt="NVIDIA" width="72" height="72"></a>
-<a href="https://opencollective.com/xgboost/sponsor/1/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/2/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/3/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/4/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/5/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/6/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/7/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/8/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/xgboost/sponsor/9/website" target="_blank"><img src="https://opencollective.com/xgboost/sponsor/9/avatar.svg"></a>
+Python examples which build a DP model are given in `sarus/python/`. 
 
-### Backers
-[[Become a backer](https://opencollective.com/xgboost#backer)]
+The main parameters involved in DP learning are: 
+- `tree_method` which must be set to `approxDP` to use Sarus XGBoost DP tree learning. 
+- `dp_epsilon_per_tree`: the privacy budget of a single tree.
+- `min_child_weight`: the minimum weight needed to construct a leaf, this influences the DP noise.
+- `subsample`: the fraction of the dataset randomly sampled to each tree, subsampling improve the privacy.
+- `num_boost_rounds`: the number of trees built. 
 
-<a href="https://opencollective.com/xgboost#backers" target="_blank"><img src="https://opencollective.com/xgboost/backers.svg?width=890"></a>
+The privacy queries used during training are stored in the model and accessible via 
+`booster.save_model()`. 
 
-## Other sponsors
-The sponsors in this list are donating cloud hours in lieu of cash donation.
+# Privacy consumption 
 
-<a href="https://aws.amazon.com/" target="_blank"><img src="https://raw.githubusercontent.com/xgboost-ai/xgboost-ai.github.io/master/images/sponsors/aws.png" alt="Amazon Web Services" width="72" height="72"></a>
->>>>>>> 7ce9fce429b2c682d6d6715e0738c0b2089e6fbd
+Note that the total privacy consumption of the boosted trees is given by:
+
+$ n \log{ \left( 1 + \gamma(e^{\epsilon} - 1) \right) } $
+
+Where $n$ is the number of trees, $\gamma$ the subsample fraction (between 0 and 1), and $\epsilon$ 
+is the budget per tree. You can refer to our explaining article in `doc/sarus` for more details on privacy consumption. 
+
+# Differential Privacy in the C++ library
+
+DP is added at three levels in the XGBoost C++ shared library (under the `src` repo): to construct sketches (with a histogram query), for split selection (with an exponential mech), and for leaf values (with a Laplace mechanism). The mechanisms are located in
+`include/xgboost/mechanisms.h`. 
+
+Relevant classes are in the `src/tree/updater_histmaker.cc` file and especially the `DPHistMaker` class which is the DP tree updater called when setting `approxDP` as `tree_method` param in XGBoost. 
+
+# Building the JVM 
+
+To use with Spark, please follow https://xgboost.readthedocs.io/en/latest/jvm/xgboost4j_spark_tutorial.html. 
+
+- Needed: Java JDK 1.8, Spark 2.12, Maven 3
+- Set the JAVA_HOME env variable first:
+`export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_221.jdk/Contents/Home/` 
+- In the `jvm-packages` folder run `mvn package install -DskipTests -Dmaven.test.skip=true`
+
+This should build the jars `xgboost4j` and `xgboost4j-spark` which will then be passed to
+`spark-submit`. The `sarus/spark` folder contains an example of Spark project in Scala with a POM file that should compile and launch Sarus XGBoost with 2 workers. 

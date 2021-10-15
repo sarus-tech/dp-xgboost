@@ -15,6 +15,7 @@
 #include <xgboost/logging.h>
 #include <xgboost/feature_map.h>
 #include <xgboost/model.h>
+#include <xgboost/mechanisms.h>
 
 #include <limits>
 #include <vector>
@@ -349,6 +350,11 @@ class RegTree : public Model {
     return stats_[nid];
   }
 
+  /* \brief add a DP mechanism to logs */
+  void AddMechanism(const DPMechanism log) {
+    dp_logs.push_back(log);
+  }
+
   /*!
    * \brief load model from stream
    * \param fi input stream
@@ -643,6 +649,9 @@ class RegTree : public Model {
   std::vector<uint32_t> split_categories_;
   // Ptr to split categories of each node.
   std::vector<Segment> split_categories_segments_;
+
+  // privacy mechanism logs
+  std::vector<DPMechanism> dp_logs;
 
   // allocate a new node,
   // !!!!!! NOTE: may cause BUG here, nodes.resize

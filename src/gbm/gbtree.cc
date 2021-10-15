@@ -159,6 +159,7 @@ void GBTree::ConfigureUpdaters() {
   if (specified_updater_) {
     return;
   }
+  std::string obj;
   // `updater` parameter was manually specified
   /* Choose updaters according to tree_method parameters */
   switch (tparam_.tree_method) {
@@ -172,6 +173,22 @@ void GBTree::ConfigureUpdaters() {
       break;
     case TreeMethod::kExact:
       tparam_.updater_seq = "grow_colmaker,prune";
+      break;
+    case TreeMethod::kApproxDP: 
+      tparam_.updater_seq = "grow_dp_histmaker"; 
+      LOG(INFO) << "Using Sarus differentially private updater"; 
+      // set the gradient filtering bound
+      for(auto c : cfg_) {
+        if(c.first == "objective") {
+          obj = c.second; break; 
+        }
+      }
+      for (auto &up : updaters_) {
+        if(obj == "reg:squarederror")
+          up->SetGradientFiltering(1.0);
+        else if(obj == "binary:logistic") 
+          up->SetGradientFiltering(1.0); 
+      }
       break;
     case TreeMethod::kHist:
       LOG(INFO) <<
@@ -353,6 +370,8 @@ void GBTree::BoostNewTrees(HostDeviceVector<GradientPair>* gpair,
       << "Mismatching size between number of rows from input data and size of "
          "gradient vector.";
   for (auto& up : updaters_) {
+    // the DP updater needs to keep track of the round number for clipping 
+    up->SetBoostingRound(this->BoostedRounds()); 
     up->Update(gpair, p_fmat, new_trees);
   }
 }

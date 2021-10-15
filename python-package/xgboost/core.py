@@ -467,6 +467,8 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         qid=None,
         label_lower_bound=None,
         label_upper_bound=None,
+        feature_min=None,
+        feature_max=None,
         feature_weights=None,
         enable_categorical: bool = False,
     ) -> None:
@@ -513,6 +515,10 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             Lower bound for survival training.
         label_upper_bound : array_like
             Upper bound for survival training.
+        feature_min : array_like 
+            Lower bounds for differential privacy training
+        feature_max : array_like 
+            Upper bounds for differential privacy training
         feature_weights : array_like, optional
             Set feature weights for column sampling.
         enable_categorical: boolean, optional
@@ -561,6 +567,8 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             qid=qid,
             label_lower_bound=label_lower_bound,
             label_upper_bound=label_upper_bound,
+            feature_min=feature_min,
+            feature_max=feature_max,
             feature_weights=feature_weights,
         )
 
@@ -568,6 +576,10 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             self.feature_names = feature_names
         if feature_types is not None:
             self.feature_types = feature_types
+        if feature_max is not None: 
+            self.feature_max = feature_max
+        if feature_min is not None: 
+            self.feature_min = feature_min 
 
     def __del__(self):
         if hasattr(self, "handle") and self.handle:
@@ -585,6 +597,8 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
         qid=None,
         label_lower_bound=None,
         label_upper_bound=None,
+        feature_min=None,
+        feature_max=None,
         feature_names=None,
         feature_types=None,
         feature_weights=None
@@ -606,6 +620,10 @@ class DMatrix:  # pylint: disable=too-many-instance-attributes
             self.set_float_info('label_lower_bound', label_lower_bound)
         if label_upper_bound is not None:
             self.set_float_info('label_upper_bound', label_upper_bound)
+        if feature_min is not None: 
+            self.set_float_info('feature_min', feature_min)
+        if feature_max is not None: 
+            self.set_float_info('feature_max', feature_max)
         if feature_names is not None:
             self.feature_names = feature_names
         if feature_types is not None:
