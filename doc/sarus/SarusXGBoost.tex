@@ -235,7 +235,7 @@ Note that the histogram query for a given sketch benefits from parallel composit
 
 The impact of this DP pre-processing is not compromising on the performance of the trees. Indeed figure~\ref{sketchAccuracy2} shows the test accuracy,
 for a real-world binary classification task, using quantile sketch with this DP method versus the baseline for different number of bins and $\epsilon = 1$.
-We can see the added approximation error from building the XGBoost sketchs with a noised differentially-private Hessian histogram is marginal. 
+We can see the added approximation error from building the XGBoost sketchs with a noisy differentially-private Hessian histogram is marginal. 
 
 \begin{figure}[h]
 \centering 
@@ -270,7 +270,7 @@ Thus, the probability of sampling candidate split $j$ with a gain $G_j$ is:
 
 $$  p_j \propto e^{ \frac{\epsilon G_j}{6 {g_l^*}^2}}$$ 
 
-In order to sample from this distribution without numerical errors, we use the "racing trick" of \cite{medina2020}. It allows one
+In order to sample from this distribution without numerical errors, we use the "racing trick" of \cite{medina2020duff}. It allows one
 to sample from a distribution using only log-probabilities and a single pass over the set and without having to compute the normalizing constant. 
 
 \subsection{Leaf values} 
@@ -301,13 +301,18 @@ the variance of the Laplace noise added. If we denote by $N_{\text{min}}$ the mi
 \Delta V \leq \frac{2 g_l^*}{N_{\text{min}} + 1 + \lambda} 
 \end{equation} 
 
-We found in our numerical experiments that introducing this parameter in XGBoost, \textit{min\_child\_weight} $= 10$ for small
-datasets of with order tens of thousands of samples, and \textit{min\_child\_weight} $= 200$ for the larger ones typically didn't decrease the accuracy of the non-DP baseline estimator but improved our differentially-private boosted trees thanks to the variance reduction obtained in the Laplace mechanism. Note that even without differential privacy concerns, the parameter is typically
+We found in our numerical experiments that introducing this parameter in XGBoost,
+$min\_child\_weight = 10$ for small datasets of with order tens of thousands of samples,
+and $min\_child\_weight = 200$ for the larger ones typically didn't decrease the accuracy of the non-DP baseline estimator
+but improved our differentially-private boosted trees thanks to the variance reduction obtained in the Laplace mechanism.
+Note that even without differential privacy concerns, the parameter is typically
 used to reduce over-fitting as it prevents building too complex trees.  
 
-Another approach is to use noisy average algorithms from the DP literature. Indeed equation \ref{leafValue} is just an average of gradients  of data that reach the leaf node. The problem of estimating a differentially-private average is well studied in literature, as in \cite{li2016dp}. 
+Another approach is to use noisy average algorithms from the DP literature. Indeed equation \ref{leafValue} is just an average of gradients of data that reach the leaf node.
+The problem of estimating a differentially-private average is well studied in literature, as in \cite{li2016dp}.
 
-For instance their algorithm 2.3 can be used, requiring to noise only the sum and using the exact count. In our case, the count is guaranteed to be non-zero as leaves cannot be empty, and the $\epsilon$-DP noisy average algorithm is the following:
+For instance their algorithm 2.3 can be used, requiring to noise only the sum and using the exact count.
+In our case, the count is guaranteed to be non-zero as leaves cannot be empty, and the $\epsilon$-DP noisy average algorithm is the following:
 \begin{algorithm}
 \caption{Noisy average to compute leaf values}
 \KwData{Leaf instance gradients $\left\{ g_i \right\}_{i=1, \cdots, n}$, privacy budget $\epsilon$, gradient filtering constant $g_l^*$}
@@ -321,40 +326,65 @@ $V \gets \frac{ S + \text{Lap}( \frac{2g_l^*}{\epsilon} )}{n + \lambda} $ \;
 \Return $-V$
 \end{algorithm}
 
-Figure \ref{leafNoisePlot} shows the impact of using these strategies to reduce the noise in the leaf values Laplace mechanism 
+Figure~\ref{leafNoisePlot} shows the impact of using these strategies to reduce the noise in the leaf values Laplace mechanism 
 compared to using the bound given by \cite{li2020privacy}. The experiment is run on the Covtype dataset and consists in a binary
-classification task with 20 trees. The baseline uses gradient filtering and geometric leaf clipping as described in \cite{li2020privacy}, while the others use the previous algorithm for NoisyAverage or a hyperparameter controlling the 
+classification task with 20 trees. The baseline uses gradient filtering and geometric leaf clipping as described in \cite{li2020privacy},
+while the others use the previous algorithm for NoisyAverage or a hyperparameter controlling the 
 minimum number of samples needed to split a node, setting to $200$ and $600$.
 
 \begin{figure}[h]
 \centering 
 \includegraphics[scale=0.7]{figs/plot_leafnoise.pdf}
+\caption{Impact of using the minimum child weight parameter in XGBoost to reduce the leaf noise variance on the Covtype dataset}
 \label{leafNoisePlot}
-\caption{Impact of using the minimum child weight parameter in XGBoost to reduce the leaf noise variance on the Covtype dataset} 
 \end{figure}
 
 \subsection{Privacy consumption and subsampling} 
 
-Note that by design of the tree construction algorithm, the DP mechanisms benefit naturally from parallel composition: at a given depth the dataset is split into disjoint subsets on which each mechanism acts, thus the privacy budget of a mechanism is counted once per depth level. The privacy budget for the sketching algorithm (which is done once per tree, at the beginning of training) is evenly divided among features. Each quantile sketch thus receives a budget of $ \frac{ \epsilon_{\text{sketch}} }{m}$. This budget is allocated to the histogram construction described previously and each bin count is noised by a Laplace noise $\text{Lap}( \frac{m}{\epsilon_{\text{sketch}}}$) 
+Note that by design of the tree construction algorithm, the DP mechanisms benefit naturally from parallel composition:
+at a given depth the dataset is split into disjoint subsets on which each mechanism acts, thus the privacy budget of a mechanism is counted once per depth level.
+The privacy budget for the sketching algorithm (which is done once per tree, at the beginning of training)
+is evenly divided among features and accumulated thanks to the basic composition theorem \cite{dwork2014, kairouz2015composition}.
+Each quantile sketch thus receives a budget of $ \frac{ \epsilon_{\text{sketch}} }{m}$.
+This budget is allocated to the histogram construction described previously and each bin count is perturbated with a Laplace noise $\text{Lap}\left( \frac{m}{\epsilon_{\text{sketch}}}\right)$
 
-The privacy budget for a single tree $\epsilon$ is divided between exponential, Laplace, and Histogram mechanisms in the following manner: $\epsilon_{\text{sketch}} = \frac{\epsilon}{3}$, $\epsilon_{\text{leaf}} = \frac{\epsilon}{3}$ and $\epsilon_{\text{exponential}} = \frac{\epsilon}{3 h}$ where $h$ is the maximum depth of the tree. 
+The privacy budget for a single tree $\epsilon$ is divided between exponential,
+Laplace, and Histogram mechanisms in the following manner:
+$\epsilon_{\text{sketch}} = \frac{\epsilon}{3}$, $\epsilon_{\text{leaf}} = \frac{\epsilon}{3}$
+and $\epsilon_{\text{exponential}} = \frac{\epsilon}{3 h}$ where $h$ is the maximum depth of the tree.
 
-We can also naturally take advantage of row subsampling in XGBoost, which as in the case of the minimum child weight, is used to prevent overfitting and brings privacy for free. Indeed, as shown in \cite{balle2018subsampling}, if one designs an $\epsilon$-DP mechanism and runs it on a random subsampled fraction (without replacement) $0 < \gamma < 1$ of the dataset, then the resulting mechanism has an overall exact privacy budget given by $\log\left(1 + \gamma(e^{\epsilon} - 1)\right)$), which as $\epsilon$ gets small (high-privacy regime), is of order $O(\gamma \epsilon)$.  
-
-% TODO Need some schema : un pour le calcul distribué, un pour résumer les mécanismes 
+We can also naturally take advantage of row subsampling in XGBoost, which as in the case of the minimum child weight,
+is used to prevent overfitting and brings privacy for free. Indeed, as shown in \cite{balle2018subsampling},
+if one designs an $\epsilon$-DP mechanism and runs it on a random subsampled fraction (without replacement) $0 < \gamma < 1$ of the dataset,
+then the resulting mechanism has an overall exact privacy budget given by $\log\left(1 + \gamma(e^{\epsilon} - 1)\right)$), which as $\epsilon$ gets small (high-privacy regime), is of order $O(\gamma \epsilon)$. 
 
 \begin{figure}[h]
 \centering 
 \includegraphics[scale=0.7]{figs/schema_mechanisms.pdf}
 \label{sketchAccuracy}
-\caption{Schema of the DP mechanisms in a single tree. A histogram is built for each feature and noised with Laplace mechanisms. It is then used to build the XGBoost sketches (one per feature). Then, as in \cite{li2020privacy} candidates splits are then selected from the set of DP candidates with an exponential mechanism. Finally the leaf values are noised with a Laplace mechanism. Note since the tree is slightly unbalanced, the privacy consumption of the exponential mechanisms as is not optimal.} 
+\caption{Schema of the DP mechanisms in a single tree. A histogram is built for each feature and perturbated with Laplace mechanisms.
+It is then used to build the XGBoost sketches (one per feature).
+Then, as in \cite{li2020privacy} candidates splits are then selected from the set of DP candidates with an exponential mechanism.
+Finally the leaf values are perturbated with a Laplace mechanism.
+Note since the tree is slightly unbalanced, the privacy consumption of the exponential mechanisms as is not optimal.} 
 \end{figure}
+
+Please also note that only \emph{basic composition} is used in this work: we only use $\epsilon$-DP mechanisms and compose them by summing up $\epsilon$'s.
+If one is ready to accept the slightly relaxed \emph{approximate differential privacy} ($\epsilon,\delta$-DP) with some $\delta>0$ then
+composition can be much cheaper in terms of privacy loss, with $\epsilon$ growing as the square root of the number of mechanisms composed sequentially (instead of linearly).
 
 \section{Numerical Experiments}
 
 \label{numExpSection}
 
-We conduct numerical experiments following \cite{li2020privacy}: we use the same datasets, some are synthetic (one for regression and one for regression), and use other real-world datasets. We also turn all the problems into regression problems, so that the universal gradient filtering bound is $g_l^* = 1$. We fix the number of trees to $20$, and use a regularization parameter $\lambda = 0.1$. The learning rate parameter is set is $0.3$. The minimum number of children to split is set to $500$ for datasets with more than a hundred thousand entries, and to $50$ for the smaller ones. Finally, row subsampling is applied with a fraction of $0.1$ (each tree is trained 10\% of the dataset). The following table \ref{resTable} summarizes the results obtained with the method described above and a non-DP benchmark. The errors reported are the average accuracy score in the case of classification problems, and the RMSE for regression, over 5 trials. 
+We conduct numerical experiments following \cite{li2020privacy}: we use the same datasets,
+some are synthetic (one for regression and one for regression), and use other real-world datasets.
+We also turn all the problems into regression problems, so that the universal gradient filtering bound is $g_l^* = 1$.
+We fix the number of trees to $20$, and use a regularization parameter $\lambda = 0.1$.
+The learning rate parameter is set is $0.3$. The minimum number of children to split is set to $500$ for datasets with more than a hundred thousand entries,
+and to $50$ for the smaller ones. Finally, row subsampling is applied with a fraction of $0.1$ (each tree is trained 10\% of the dataset).
+The following table (figure~\ref{resTable}) summarizes the results obtained with the method described above and a non-DP benchmark.
+The errors reported are the average accuracy score in the case of classification problems, and the RMSE for regression, over 5 trials. 
 
 Figure \ref{figError} shows the test accuracy error compared to the method of \cite{li2020privacy}. As pointed out, the algorithm they describe is for the exact learning algorithm (looping over all the splits), which is very slow and unable to handle large datasets, however the implementation they give uses LightGBM ability to build a histogram of feature values, in a way that is very similar to XGBoost. The resulting implementation and numerical results in \cite{li2020privacy} are thus not entirely differentially private. However, as in the case of the XGBoost sketching algorithm, the privacy budget needed to correct this is not large and we think it still makes sense to compare our results with the ones given in their paper. 
 
@@ -369,8 +399,8 @@ The results displayed are very encouraging especially for the higher privacy-reg
    synthetic reg (RMSE) & $86.4$ & $76$ & $73$ & $67$ & $61$ & $60$ & $24.1$ \\  \hline 
    abalone (RMSE) & $6$ & $5.5$ & $3.2$ & $2.7$ & $2.6$ & $2.4$ & $2.22$ \\ \hline 
 \end{tabular}
+\caption{Test error (RMSE or accuracy in \%) on different datasets}
 \label{resTable}
-\caption{Test error (RMSE or accuracy in \%) on different datasets} 
 \end{figure}
 
 \begin{figure}[h]
@@ -407,11 +437,18 @@ privacy budget $\epsilon$}
 
 \section{Conclusion} 
 
-We have described a way to implement a fully $\epsilon$ differentially-private gradient boosted trees algorithm based on XGBoost and the work of \cite{li2020privacy}. We extended their workd to the approximate learning method by building a DP histogram and were able to reduce the crucial noise in the leaf values thanks to widely used hyperparameters that automatically bring differential privacy and often reduce overfitting. By leveraging XGBoost capabilities to handle large-scale datasets and its integration with Spark we thus obtained an efficient method to train DP boosted trees for real-world applications. 
+We have described a way to implement a fully $\epsilon$ differentially-private gradient boosted trees algorithm based on XGBoost and the work of \cite{li2020privacy}.
+We extended their workd to the approximate learning method by building a DP histogram and were able to reduce the crucial noise in the leaf values thanks to widely used hyperparameters that automatically bring differential privacy and often reduce overfitting. By leveraging XGBoost capabilities to handle large-scale datasets and its integration with Spark we thus obtained an efficient method to train DP boosted trees for real-world applications. 
 
-Many improvements remain to be explored. First, a private-by-design quantile sketching algorithm could be studied instead of our simple approach, perhaps using the state-of-the-art DP quantile algorithms such as JointExp from \cite{gillenwater2021}. Another topic which could lead to privacy improvement is the distribution of the privacy budget among trees and inside each tree. 
+Many improvements remain to be explored. First, a private-by-design quantile sketching algorithm could be studied instead of our simple approach,
+perhaps using the state-of-the-art DP quantile algorithms such as JointExp from \cite{gillenwater2021}.
+Another topic which could lead to privacy improvement is the distribution of the privacy budget among trees and inside each tree. 
 
-[...]
+Also, accounting is quite rudimentary in this work. When training large models, approaches such as $f$-DP or Gaussian-DP \cite{dong2019gaussian} could result in
+much better privacy consumptions, as long as a \emph{approximate DP} with a small $\delta$ is accepted.
+
+Beyond accounting, many improvements could be obtained by keeping track of past queries to answers new queries (see \cite{dwork2012privacy}).
+Practical implementations of this idea exist \cite{kotsogiannis2019privatesql, kotsogiannis2019architecting} and could be adapted to boosted tree training.
  
 \bibliographystyle{alpha}
 \bibliography{SarusXGBoost}
