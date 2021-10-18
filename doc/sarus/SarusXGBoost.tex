@@ -61,7 +61,7 @@ Wilson et alii also introduced a system \cite{wilson2019differentially} where th
 in the case many rows relate to the same individual.
 To save privacy \cite{kotsogiannis2019privatesql, kotsogiannis2019architecting} designed a system to run SQL queries
 on private synopses of the data.
-Recently a team at Google proposed \footnote{An implementation is available there: https://github.com/google/differential-privacy}
+Recently a team at Google proposed \footnote{An implementation is available there: \href{https://github.com/google/differential-privacy}{https://github.com/google/differential-privacy}}
 a DP version of SQL \cite{wilson2019differentially} with a focus on bounding user contribution even when it appears more than once.
 
 Beyond simple statistics and SQL-like analytics, many efforts have been devoted to the developpement of
@@ -143,7 +143,7 @@ The learning objective in XGBoost is a regularized loss:
 \end{equation} 
 
 Where $\Omega(f_k)$ is the regularization term for the $k$-th tree, which is defined as the sum of squares of leaf values of the tree. $l(.,.)$ is a loss function which can correspond to classification or regression problems, \textsl{e.g.} $l(
-\hat{y}, y) = \frac 12 (\hat{y} - y)^2$, which we will choose for simplicity and turning classification problems into regression ones for our numerical experiments. \smallskip 
+\hat{y}, y) = \frac 12 (\hat{y} - y)^2$, which we will choose for simplicity and turning classification problems into regression ones for our numerical experiments. 
 
 To solve this optimization problem the usual approach is first to use a greedy method. For the $k$-th tree, the objective will be to minimize the following:
 
@@ -177,41 +177,71 @@ V(I) = - \frac{\sum_{i \in I} g_i}{\vert I \vert + \lambda}
 
 \subsection{XGBoost}
 
-The basic exact algorithm described above is not feasible in practice as it requires looping over every possible split of every (possibly continuous) feature. XGBoost aims at providing a large-scale gradient boosted trees library and solving this problem. It is written in C++ and presents several features which make it able to handle datasets with billions of examples. It comes with interfaces in Python, Java, and Spark (in Scala) which can be used for distributed learning. \smallskip 
+The basic exact algorithm described above is not practical for large datasets as it requires looping over every possible split of every (possibly continuous) feature.
+XGBoost aims at providing a large-scale gradient boosted trees library and solving this problem. It is written in C++ and presents several features which make
+it able to handle datasets with billions of examples. It comes with interfaces in Python, Java, and Spark (in Scala) which can be used for distributed learning.
 
-One of these optimizations is using a compressed column (CSC) format to store the dataset, as a lot of steps (computing quantiles, finding the best splits) are faster when the feature values are stored in order. The dataset is split into \textit{block} that fit in memory and can be distributed accross machines. 
+One of these optimizations is using a compressed column (CSC) format to store the dataset,
+as a lot of steps (computing quantiles, finding the best splits) are faster when the feature values are stored in order.
+The dataset is split into \textit{block} that fit in memory and can be distributed accross machines. 
 
-XGBoost is also able to handle sparsity and missing values by enumerating only the non-missing or non-zero splits and computing the gain twice: sending the default values to the left or the right node. This improves the computation drastically for the sparse datasets and the default direction is thus learnt from data.\smallskip 
+XGBoost is also able to handle sparsity and missing values by enumerating only the non-missing or non-zero splits and computing the gain twice:
+sending the default values to the left or the right node. This improves the computation drastically for the sparse datasets and the default direction is thus learnt from data.
 
-The global approximate algorithm relies on the following idea: instead of finding the optimal splits among all possible features values, XGBoost first computes proposal splits based on percentiles of data. In order to do that, it uses a quantile sketching algorithm, which constructs a \textit{quantile summary} 
-for each partition (\textit{block}) of the training set, and allows for the efficient computation of approximate percentiles of each feature even for a large scale dataset. The candidates are either recomputed at every level of the tree, or once per tree (the global approximate method). \cite{chen2016xgboost} show that using the global method with an order of magnitude of 50 proposal splits per feature actually gives a very good trade-off between accuracy and tree-building time. To implement differential privacy into XGBoost we will thus use this method. \smallskip 
+The global approximate algorithm relies on the following idea: instead of finding the optimal splits among all possible features values,
+XGBoost first computes proposal splits based on percentiles of data. In order to do that, it uses a quantile sketching algorithm, which constructs a \textit{quantile summary} 
+for each partition (\textit{block}) of the training set, and allows for the efficient computation of approximate percentiles of each feature even for a large scale dataset.
+The candidates are either recomputed at every level of the tree, or once per tree (the global approximate method).
+\cite{chen2016xgboost} show that using the global method with an order of magnitude of 50 proposal splits per feature actually gives a very good trade-off between accuracy and tree-building time.
+To implement differential privacy into XGBoost we will thus use this method. 
 
 \section{Differentially Private Boosted Trees} 
 
-While \cite{li2020privacy} provide a differentially private version of gradient boosted trees, they only consider the exact tree construction algorithm, which loops through every feature value and is not scalable and slow for modern datasets. Our objective is thus to add differential privacy to the XGBoost library, leveraging its large-scale training capabilities. \smallskip 
+While \cite{li2020privacy} provide a differentially private version of gradient boosted trees, they only consider the exact tree construction algorithm,
+which loops through every feature value and is not scalable and slow for modern datasets. Our objective is thus to add differential privacy to the XGBoost library,
+leveraging its large-scale training capabilities. 
 
 In order to add differential privacy to XGBoost we distinguish three steps of the approximate learning algorithm. First, the 
 construction of "quantile sketchs" for each feature as described previously. Second, the split selection based on a histogram
 constructed using the final quantile sketchs for each feature. Finally, the leaf value calculation which can be thought of as computing
-the average gradient of data samples belonging to the leaf. The mechanisms are then composed sequentially to produce an overall differentially-private tree building algorithm. \smallskip 
+the average gradient of data samples belonging to the leaf. The mechanisms are then composed sequentially to produce an overall differentially-private tree building algorithm.
 
-We use here the gradient data filtering (GDF) technique introduced by \cite{li2020privacy}: the labels are assumed to be bounded in $[-1,1]$ and a universal constant (independent of training data and depending only on the loss function) $g_l^{*}$ filters the samples by gradient before the training of each tree. This filtering allows to compute the exact sensitivity of mechanisms for split finding and leaf value calculations. \smallskip 
+We use here the gradient data filtering (GDF) technique introduced by \cite{li2020privacy}:
+the labels are assumed to be bounded in $[-1,1]$ and a universal constant (independent of training data and depending only on the loss function)
+$g_l^{*}$ filters the samples by gradient before the training of each tree.
+This filtering allows to compute the exact sensitivity of mechanisms for split finding and leaf value calculations.
 
 \subsection{Sketching} 
 
-The weighted quantile sketching algorithm is one of the feature of XGBoost which makes it able to deal with datasets containing millions of samples. While quantile sketching algorithms existed before \cite{chen2016xgboost}, the weighted quantile sketch described in their Appendix allows one to construct a histogram by weight rather than by count. We will briefly remind the main ideas of quantile sketching in XGBoost. \smallskip
+The weighted quantile sketching algorithm is one of the feature of XGBoost which makes it able to deal with datasets containing millions of samples.
+While quantile sketching algorithms existed before \cite{chen2016xgboost}, the weighted quantile sketch described in their Appendix allows one to construct a histogram by weight rather than by count.
+We will briefly remind the main ideas of quantile sketching in XGBoost.
 
-Note that equation \ref{objective} can be interpreted as a weighted least squares loss with a weight for instance $i$ given by $h_i$, the Hessian. Thus XGBoost aims at finding for each feature $k$ a set of candidates $\left\{ s_{k,1}, \cdots, s_{k,l}\right\}$, in increasing order, such that the $s_{k,j}$ are evenly distributed by weight, that is that the sum of Hessian of instances in the range $[s_{k,j}, s_{k,j+1}[$ is less than a parameter $\epsilon$ (the sketch accuracy). The quantile sketch builds a quantile summary which contains the minimal information necessary to compute the candidates with a given accuracy. Two quantile summaries can be merged together, and a summary that becomes too large can be pruned down, both these operations increase the approximation error $\epsilon$. An initial summary is constructed by starting from a subset of the data points and computing their exact ranks. XGBoost then repeatedly merges and prunes the quantile summaries for each feature in a distributed manner (recall that the dataset is stored in a sorted format on different in-memory \textit{blocks}). \smallskip 
+Note that equation \ref{objective} can be interpreted as a weighted least squares loss with a weight for instance $i$ given by $h_i$, the Hessian.
+Thus XGBoost aims at finding for each feature $k$ a set of candidates $\left\{ s_{k,1}, \cdots, s_{k,l}\right\}$, in increasing order,
+such that the $s_{k,j}$ are evenly distributed by weight, that is that the sum of Hessian of instances in the range $[s_{k,j}, s_{k,j+1}[$
+is less than a parameter $\epsilon$ (the sketch accuracy). The quantile sketch builds a quantile summary which contains the minimal information necessary to compute the candidates with a given accuracy.
+Two quantile summaries can be merged together, and a summary that becomes too large can be pruned down,
+both these operations increase the approximation error $\epsilon$. An initial summary is constructed by starting from a subset of the data points and computing their exact ranks.
+XGBoost then repeatedly merges and prunes the quantile summaries for each feature in a distributed manner (recall that the dataset is stored in a sorted format on different in-memory \textit{blocks}). 
 
-To make this step differentially private, one could try to design a DP (weighted) quantile sketching algorithm. This remains an open and difficult problem as even simply computing DP quantiles is not easy (see for instance the JointExp algorithm of \cite{gillenwater2021}). The solution we adopt is to simply feed the sketch with differentially private data. We require the knowledge of differentially private bounds (maximum and minimum) of each feature (which will be needed in any case for the DP guarantees of \cite{li2020privacy} to hold). We then build a simple histogram of weights, with a fixed number of bins and equal spacing, for each feature and noise every bin count or weight with a Laplace query. Points are then passed to the sketch construction algorithm of XGBoost with differentially private points and weights, making the quantile sketch a post-processing step. Note that the histogram query for a given sketch benefits from parallel composition since the bins are by construction disjoint (\cite{dwork2014}), thus the privacy budget for each sketch can be applied to each bin. \smallskip 
+To make this step differentially private, one could try to design a DP (weighted) quantile sketching algorithm.
+This remains an open and difficult problem as even simply computing DP quantiles is not easy (see for instance the JointExp algorithm of \cite{gillenwater2021}).
+The solution we adopt is to simply feed the sketch with differentially private data.
+We require the knowledge of differentially private bounds (maximum and minimum) of each feature (which will be needed in any case for the DP guarantees of \cite{li2020privacy} to hold).
+We then build a simple histogram of weights, with a fixed number of bins and equal spacing, for each feature and noise every bin count or weight with a Laplace query.
+Points are then passed to the sketch construction algorithm of XGBoost with differentially private points and weights, making the quantile sketch a post-processing step.
+Note that the histogram query for a given sketch benefits from parallel composition since the bins are by construction disjoint (\cite{dwork2014}), thus the privacy budget for each sketch can be applied to each bin. 
 
-The impact of this DP pre-processing is not compromising on the performance of the trees. Indeed the following figure \ref{sketchAccuracy2} show the test accuracy, for a real-world binary classification task, using quantile sketch with this DP method versus the baseline for different number of bins and $\epsilon = 1$. We can see the added approximation error from building the XGBoost sketchs with a noised differentially-private Hessian histogram is marginal. \smallskip 
+The impact of this DP pre-processing is not compromising on the performance of the trees. Indeed figure~\ref{sketchAccuracy2} shows the test accuracy,
+for a real-world binary classification task, using quantile sketch with this DP method versus the baseline for different number of bins and $\epsilon = 1$.
+We can see the added approximation error from building the XGBoost sketchs with a noised differentially-private Hessian histogram is marginal. 
 
 \begin{figure}[h]
 \centering 
 \includegraphics[scale=0.7]{figs/plot_accuracy_bins.pdf}
+\caption{Impact of bin size of the DP histogram to feed the weighted quantile sketching algorithm}
 \label{sketchAccuracy2}
-\caption{Impact of bin size of the DP histogram to feed the weighted quantile sketching algorithm} 
 \end{figure}
 
 \subsection{Split selection}
@@ -222,7 +252,7 @@ G_{kv} &=& \sum_{j\ \text{s.t}\ s_{k,v-1} < x_{jk} \leq s_{k,v} } g_j \\
 H_{kv} &=& \sum_{j\ \text{s.t}\ s_{k,v-1} < x_{jk} \leq s_{k,v} } h_j 
 \end{eqnarray*}
 
-Where the statistics are collected only for the non-missing entries as part of the sparsity-aware improvement of XGBoost. The gain is then computed twice for each proposed split using this histogram, first by sending missing values to the left child, and then sending them to the right child, as is described in Algorithm 3 from \cite{chen2016xgboost}. \smallskip
+Where the statistics are collected only for the non-missing entries as part of the sparsity-aware improvement of XGBoost. The gain is then computed twice for each proposed split using this histogram, first by sending missing values to the left child, and then sending them to the right child, as is described in Algorithm 3 from \cite{chen2016xgboost}.
 
 Selecting the best split in a DP manner is then not more complex than in the basic exact algorithm considered in \cite{li2020privacy}, we use an exponential mechanism, described in \cite{dwork2014}: it allows one to select a candidate 
 in a list where each candidate $s$ is assigned a utility function $u(X,s)$ which depends on the dataset and has a global utility of $\Delta u$. If samples the candidate from the following distribution, then the choice is guaranteed to be $\epsilon$-DP: 
@@ -262,7 +292,7 @@ Which reaches a maximum of (remembering that $|g_i| \leq g_l^*$)
 \end{equation} 
 
 This is then upper-bounded by $\frac{g_l^*}{1+\lambda}$ and this sensitivity is used to noise the leaves with a Laplace mechanism. However we
-can drastically improve this worst-case bound with two different approaches. \smallskip 
+can drastically improve this worst-case bound with two different approaches. 
 
 Indeed, XGBoost and other gradient boosting libraries typically offer a hyperparameter which controls the minimum Hessian weight (or number of samples) needed when expanding a node. When this parameter is set it gives Eq. \ref{leafSensi} a better bound which can drastically reduce
 the variance of the Laplace noise added. If we denote by $N_{\text{min}}$ the minimum number of samples required in a child to split a node further, then we obtain the following sensitivity for the Laplace mechanisms: 
@@ -273,7 +303,7 @@ the variance of the Laplace noise added. If we denote by $N_{\text{min}}$ the mi
 
 We found in our numerical experiments that introducing this parameter in XGBoost, \textit{min\_child\_weight} $= 10$ for small
 datasets of with order tens of thousands of samples, and \textit{min\_child\_weight} $= 200$ for the larger ones typically didn't decrease the accuracy of the non-DP baseline estimator but improved our differentially-private boosted trees thanks to the variance reduction obtained in the Laplace mechanism. Note that even without differential privacy concerns, the parameter is typically
-used to reduce over-fitting as it prevents building too complex trees.  \smallskip 
+used to reduce over-fitting as it prevents building too complex trees.  
 
 Another approach is to use noisy average algorithms from the DP literature. Indeed equation \ref{leafValue} is just an average of gradients  of data that reach the leaf node. The problem of estimating a differentially-private average is well studied in literature, as in \cite{li2016dp}. 
 
@@ -305,9 +335,9 @@ minimum number of samples needed to split a node, setting to $200$ and $600$.
 
 \subsection{Privacy consumption and subsampling} 
 
-Note that by design of the tree construction algorithm, the DP mechanisms benefit naturally from parallel composition: at a given depth the dataset is split into disjoint subsets on which each mechanism acts, thus the privacy budget of a mechanism is counted once per depth level. The privacy budget for the sketching algorithm (which is done once per tree, at the beginning of training) is evenly divided among features. Each quantile sketch thus receives a budget of $ \frac{ \epsilon_{\text{sketch}} }{m}$. This budget is allocated to the histogram construction described previously and each bin count is noised by a Laplace noise $\text{Lap}( \frac{m}{\epsilon_{\text{sketch}}}$) \smallskip 
+Note that by design of the tree construction algorithm, the DP mechanisms benefit naturally from parallel composition: at a given depth the dataset is split into disjoint subsets on which each mechanism acts, thus the privacy budget of a mechanism is counted once per depth level. The privacy budget for the sketching algorithm (which is done once per tree, at the beginning of training) is evenly divided among features. Each quantile sketch thus receives a budget of $ \frac{ \epsilon_{\text{sketch}} }{m}$. This budget is allocated to the histogram construction described previously and each bin count is noised by a Laplace noise $\text{Lap}( \frac{m}{\epsilon_{\text{sketch}}}$) 
 
-The privacy budget for a single tree $\epsilon$ is divided between exponential, Laplace, and Histogram mechanisms in the following manner: $\epsilon_{\text{sketch}} = \frac{\epsilon}{3}$, $\epsilon_{\text{leaf}} = \frac{\epsilon}{3}$ and $\epsilon_{\text{exponential}} = \frac{\epsilon}{3 h}$ where $h$ is the maximum depth of the tree. \smallskip 
+The privacy budget for a single tree $\epsilon$ is divided between exponential, Laplace, and Histogram mechanisms in the following manner: $\epsilon_{\text{sketch}} = \frac{\epsilon}{3}$, $\epsilon_{\text{leaf}} = \frac{\epsilon}{3}$ and $\epsilon_{\text{exponential}} = \frac{\epsilon}{3 h}$ where $h$ is the maximum depth of the tree. 
 
 We can also naturally take advantage of row subsampling in XGBoost, which as in the case of the minimum child weight, is used to prevent overfitting and brings privacy for free. Indeed, as shown in \cite{balle2018subsampling}, if one designs an $\epsilon$-DP mechanism and runs it on a random subsampled fraction (without replacement) $0 < \gamma < 1$ of the dataset, then the resulting mechanism has an overall exact privacy budget given by $\log\left(1 + \gamma(e^{\epsilon} - 1)\right)$), which as $\epsilon$ gets small (high-privacy regime), is of order $O(\gamma \epsilon)$.  
 
@@ -324,9 +354,9 @@ We can also naturally take advantage of row subsampling in XGBoost, which as in 
 
 \label{numExpSection}
 
-We conduct numerical experiments following \cite{li2020privacy}: we use the same datasets, some are synthetic (one for regression and one for regression), and use other real-world datasets. We also turn all the problems into regression problems, so that the universal gradient filtering bound is $g_l^* = 1$. We fix the number of trees to $20$, and use a regularization parameter $\lambda = 0.1$. The learning rate parameter is set is $0.3$. The minimum number of children to split is set to $500$ for datasets with more than a hundred thousand entries, and to $50$ for the smaller ones. Finally, row subsampling is applied with a fraction of $0.1$ (each tree is trained 10\% of the dataset). The following table \ref{resTable} summarizes the results obtained with the method described above and a non-DP benchmark. The errors reported are the average accuracy score in the case of classification problems, and the RMSE for regression, over 5 trials. \smallskip 
+We conduct numerical experiments following \cite{li2020privacy}: we use the same datasets, some are synthetic (one for regression and one for regression), and use other real-world datasets. We also turn all the problems into regression problems, so that the universal gradient filtering bound is $g_l^* = 1$. We fix the number of trees to $20$, and use a regularization parameter $\lambda = 0.1$. The learning rate parameter is set is $0.3$. The minimum number of children to split is set to $500$ for datasets with more than a hundred thousand entries, and to $50$ for the smaller ones. Finally, row subsampling is applied with a fraction of $0.1$ (each tree is trained 10\% of the dataset). The following table \ref{resTable} summarizes the results obtained with the method described above and a non-DP benchmark. The errors reported are the average accuracy score in the case of classification problems, and the RMSE for regression, over 5 trials. 
 
-Figure \ref{figError} shows the test accuracy error compared to the method of \cite{li2020privacy}. As pointed out, the algorithm they describe is for the exact learning algorithm (looping over all the splits), which is very slow and unable to handle large datasets, however the implementation they give uses LightGBM ability to build a histogram of feature values, in a way that is very similar to XGBoost. The resulting implementation and numerical results in \cite{li2020privacy} are thus not entirely differentially private. However, as in the case of the XGBoost sketching algorithm, the privacy budget needed to correct this is not large and we think it still makes sense to compare our results with the ones given in their paper. \smallskip 
+Figure \ref{figError} shows the test accuracy error compared to the method of \cite{li2020privacy}. As pointed out, the algorithm they describe is for the exact learning algorithm (looping over all the splits), which is very slow and unable to handle large datasets, however the implementation they give uses LightGBM ability to build a histogram of feature values, in a way that is very similar to XGBoost. The resulting implementation and numerical results in \cite{li2020privacy} are thus not entirely differentially private. However, as in the case of the XGBoost sketching algorithm, the privacy budget needed to correct this is not large and we think it still makes sense to compare our results with the ones given in their paper. 
 
 The results displayed are very encouraging especially for the higher privacy-regimes ($\epsilon$ = 1). As expected, using subsampling and a minimum weight stopping criterion allows to profit from the natural prevention of overfitting and a significant noise reduction, leading us to obtain almost half the test classification error on the Covtype dataset for $\epsilon = 1$. As in the case of \cite{li2020privacy} we find that the differential-privacy mechanisms do not introduce any significant runtime overhead as compared to the XGBoost baseline, for instance on the covtype dataset, the mean runtime per tree for the DP version is $1$ second compared to a non-DP mean of $0.7$ second.   
 
@@ -377,7 +407,7 @@ privacy budget $\epsilon$}
 
 \section{Conclusion} 
 
-We have described a way to implement a fully $\epsilon$ differentially-private gradient boosted trees algorithm based on XGBoost and the work of \cite{li2020privacy}. We extended their workd to the approximate learning method by building a DP histogram and were able to reduce the crucial noise in the leaf values thanks to widely used hyperparameters that automatically bring differential privacy and often reduce overfitting. By leveraging XGBoost capabilities to handle large-scale datasets and its integration with Spark we thus obtained an efficient method to train DP boosted trees for real-world applications. \smallskip 
+We have described a way to implement a fully $\epsilon$ differentially-private gradient boosted trees algorithm based on XGBoost and the work of \cite{li2020privacy}. We extended their workd to the approximate learning method by building a DP histogram and were able to reduce the crucial noise in the leaf values thanks to widely used hyperparameters that automatically bring differential privacy and often reduce overfitting. By leveraging XGBoost capabilities to handle large-scale datasets and its integration with Spark we thus obtained an efficient method to train DP boosted trees for real-world applications. 
 
 Many improvements remain to be explored. First, a private-by-design quantile sketching algorithm could be studied instead of our simple approach, perhaps using the state-of-the-art DP quantile algorithms such as JointExp from \cite{gillenwater2021}. Another topic which could lead to privacy improvement is the distribution of the privacy budget among trees and inside each tree. 
 
