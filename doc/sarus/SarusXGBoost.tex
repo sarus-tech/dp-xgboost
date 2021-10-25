@@ -465,7 +465,7 @@ perhaps using the state-of-the-art DP quantile algorithms such as JointExp from 
 Another topic which could lead to privacy improvement is the distribution of the privacy budget among trees and inside each tree. 
 
 Also, accounting is quite rudimentary in this work. When training large models, approaches such as $f$-DP or Gaussian-DP \cite{dong2019gaussian} could result in
-much better privacy consumptions, as long as a \emph{approximate DP} with a small $\delta$ is accepted.
+much better privacy consumptions, when \emph{approximate DP} with a small $\delta$ is acceptable.
 
 Beyond accounting, many improvements could be obtained by keeping track of past queries to answers new queries (see \cite{dwork2012privacy}).
 Practical implementations of this idea exist \cite{kotsogiannis2019privatesql, kotsogiannis2019architecting} and could be adapted to boosted tree training.
