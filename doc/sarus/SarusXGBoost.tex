@@ -17,7 +17,7 @@
 
 \begin{document}
 
-\title{DPXGBoost: Private Machine Learning at Scale}
+\title{DP-XGBoost: Private Machine Learning at Scale}
 \author{Nicolas Grislain\\
 \url{ng@sarus.tech} \\ 
 \and 
@@ -25,6 +25,25 @@ Joan Gonzalvez \\
 \url{jg@sarus.tech}}
 \date{}
 \maketitle
+
+\begin{abstract}
+The big-data revolution announced ten years ago \cite{manyika2011big}
+does not seem to have fully happened at the expected scale \cite{analytics2016age}.
+One of the main obstacle to this, has been the lack of data circulation.
+And one of the many reasons people and organizations did not share as much as expected
+is the \emph{privacy risk} associated with data sharing operations.
+
+There has been many works on practical systems to compute statistical
+queries with \emph{Differential Privacy} (DP). There have also been practical implementations of
+systems to train Neural Networks with DP \cite{mcmahan2018general, opacus}, but relatively little efforts
+have been dedicated to designing scalable classical \emph{Machine Learning} (ML) models providing
+DP garantees.
+
+In this work we decribe and implement a DP fork of a battle tested ML model: \emph{XGBoost}.
+Our approach beats by a large margin previous attemps at the task, in terms of accuracy achieved for a given privacy budget.
+It is also the only DP implementation of boosted trees that scales to big data and can run in
+distributed environments such as: \href{https://kubernetes.io/}{Kubernetes}, \href{https://dask.org/}{Dask} or \href{https://spark.apache.org/}{Apache Spark}.
+\end{abstract}
 
 % Introduction and motivation 
 \section{Introduction}
@@ -79,7 +98,8 @@ The goal of this work is to enable state-of-the-art machine learning with differ
 The scalability is particularily important since the larger the number of individuals in the data the cheapest privacy is
 in terms of accuracy. We decided to design and build a private boosted tree solution, because of the popularity in the industry of
 regression tree based methods \cite{wu2008top} and boosted trees in particular (see:
-\href{https://storage.googleapis.com/kaggle-media/surveys/Kaggle's\%20State\%20of\%20Machine\%20Learning\%20and\%20Data\%20Science\%202021.pdf}{Kaggle - State of Machine Learning and Data Science 2021}). To build a scalable solution, we started from a mature platform. The main existing implementation 
+\href{https://storage.googleapis.com/kaggle-media/surveys/Kaggle's\%20State\%20of\%20Machine\%20Learning\%20and\%20Data\%20Science\%202021.pdf}{Kaggle - State of Machine Learning and Data Science 2021}).
+To build a scalable solution, we started from a mature platform.
 There are many implementations of regression trees, among which XGBoost \cite{chen2016xgboost},
 LightGBM \cite{ke2017lightgbm} or CatBoost \cite{prokhorenkova2017catboost}.
 Because of its adoption and scalability, XGBoost was a good foundation to build upon.
