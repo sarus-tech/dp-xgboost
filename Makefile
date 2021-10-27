@@ -70,13 +70,13 @@ amalgamation/xgboost-all0.o: amalgamation/xgboost-all0.cc
 	$(CXX) -c $(CFLAGS) $< -o $@
 
 rcpplint:
-	python3 dmlc-core/scripts/lint.py xgboost ${LINT_LANG} R-package/src
+	python3 dmlc-core/scripts/lint.py dp_xgboost ${LINT_LANG} R-package/src
 
 lint: rcpplint
-	python3 dmlc-core/scripts/lint.py --exclude_path python-package/xgboost/dmlc-core \
-	  python-package/xgboost/include python-package/xgboost/lib \
-	  python-package/xgboost/make python-package/xgboost/rabit \
-	  python-package/xgboost/src --pylint-rc ${PWD}/python-package/.pylintrc xgboost \
+	python3 dmlc-core/scripts/lint.py --exclude_path python-package/dp_xgboost/dmlc-core \
+	  python-package/dp_xgboost/include python-package/dp_xgboost/lib \
+	  python-package/dp_xgboost/make python-package/dp_xgboost/rabit \
+	  python-package/dp_xgboost/src --pylint-rc ${PWD}/python-package/.pylintrc dp_xgboost \
 	  ${LINT_LANG} include src python-package
 
 ifeq ($(TEST_COVER), 1)
@@ -91,9 +91,9 @@ endif
 # If any of the dask tests failed, contributor won't see the other error.
 mypy:
 	cd python-package; \
-	mypy ./xgboost/dask.py && \
+	mypy ./dp_xgboost/dask.py && \
 	mypy ../tests/python-gpu/test_gpu_with_dask.py && \
-	mypy ./xgboost/sklearn.py || exit 1; \
+	mypy ./dp_xgboost/sklearn.py || exit 1; \
 	mypy . || true ;
 
 clean:
