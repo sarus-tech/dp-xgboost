@@ -99,7 +99,7 @@ jobs:
         python setup.py sdist
         pip install -v ./dist/dp-xgboost-*.tar.gz
         cd ..
-        python -c 'import dp-xgboost'
+        python -c 'import dp_xgboost'
 
   c-api-demo:
     name: Test installing DP-XGBoost lib + building the C API demo
@@ -267,17 +267,12 @@ jobs:
         sudo apt-get install -y --no-install-recommends doxygen graphviz ninja-build
         python -m pip install wheel setuptools
         python -m pip install awscli
-    - name: Install gsutil
-      run: |
-        apk add --update make ca-certificates openssl python
-        update-ca-certificates
-        wget https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz
-        tar zxvf google-cloud-sdk.tar.gz && ./google-cloud-sdk/install.sh --usage-reporting=false --path-update=true
-        PATH="google-cloud-sdk/bin:${PATH}"
-        gcloud --quiet components update
-        echo $GCP_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-        gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-        gcloud config set project $GCP_PROJECT_ID
+    - name: Authenticate on GCS
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '270.0.0'
+        service_account_email: ${{ secrets.GKE_EMAIL }}
+        service_account_key: ${{ secrets.GKE_KEY }}
     - name: Run Doxygen
       run: |
         mkdir build
