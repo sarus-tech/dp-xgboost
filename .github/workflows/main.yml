@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: XGBoost-CI
+name: DP-XGBoost-CI
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -50,7 +50,7 @@ jobs:
     - name: Install system packages
       run: |
         sudo apt-get install -y --no-install-recommends ninja-build
-    - name: Build and install XGBoost
+    - name: Build and install DP-XGBoost
       shell: bash -l {0}
       run: |
         mkdir build
@@ -63,7 +63,7 @@ jobs:
         ctest --extra-verbose
 
   python-sdist-test:
-    name: Test installing XGBoost Python source package
+    name: Test installing DP-XGBoost Python source package
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -91,18 +91,18 @@ jobs:
       run: |
         conda info
         conda list
-    - name: Build and install XGBoost
+    - name: Build and install DP-XGBoost
       shell: bash -l {0}
       run: |
         cd python-package
         python --version
         python setup.py sdist
-        pip install -v ./dist/xgboost-*.tar.gz
+        pip install -v ./dist/dp-xgboost-*.tar.gz
         cd ..
-        python -c 'import xgboost'
+        python -c 'import dp-xgboost'
 
   c-api-demo:
-    name: Test installing XGBoost lib + building the C API demo
+    name: Test installing DP-XGBoost lib + building the C API demo
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -126,7 +126,7 @@ jobs:
       run: |
         conda info
         conda list
-    - name: Build and install XGBoost
+    - name: Build and install DP-XGBoost
       shell: bash -l {0}
       run: |
         mkdir build
@@ -267,6 +267,17 @@ jobs:
         sudo apt-get install -y --no-install-recommends doxygen graphviz ninja-build
         python -m pip install wheel setuptools
         python -m pip install awscli
+    - name: Install gsutil
+      run: |
+        apk add --update make ca-certificates openssl python
+        update-ca-certificates
+        wget https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz
+        tar zxvf google-cloud-sdk.tar.gz && ./google-cloud-sdk/install.sh --usage-reporting=false --path-update=true
+        PATH="google-cloud-sdk/bin:${PATH}"
+        gcloud --quiet components update
+        echo $GCP_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+        gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+        gcloud config set project $GCP_PROJECT_ID
     - name: Run Doxygen
       run: |
         mkdir build
@@ -281,8 +292,10 @@ jobs:
     - name: Publish
       run: |
         cd build/
-        tar cvjf ${{ steps.extract_branch.outputs.branch }}.tar.bz2 doc_doxygen/
-        python -m awscli s3 cp ./${{ steps.extract_branch.outputs.branch }}.tar.bz2 s3://xgboost-docs/doxygen/ --acl public-read
+        # Redirect the doc to our bucket
+        # tar cvjf ${{ steps.extract_branch.outputs.branch }}.tar.bz2 doc_doxygen/
+        # python -m awscli s3 cp ./${{ steps.extract_branch.outputs.branch }}.tar.bz2 s3://xgboost-docs/doxygen/ --acl public-read
+        gsutil -m cp -R doc_doxygen/* gs://dp-xgboost-docs.sarus.tech/doxygen/
       if: github.ref == 'refs/heads/master' || contains(github.ref, 'refs/heads/release_')
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_IAM_S3_UPLOADER }}
