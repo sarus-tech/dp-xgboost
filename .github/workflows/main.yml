@@ -150,7 +150,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        # os: [windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -268,7 +269,7 @@ jobs:
         python -m pip install wheel setuptools
         python -m pip install awscli
     - name: Authenticate on GCS
-      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      uses: google-github-actions/setup-gcloud@master
       with:
         version: '270.0.0'
         service_account_email: ${{ secrets.GKE_EMAIL }}
@@ -287,9 +288,6 @@ jobs:
     - name: Publish
       run: |
         cd build/
-        # Redirect the doc to our bucket
-        # tar cvjf ${{ steps.extract_branch.outputs.branch }}.tar.bz2 doc_doxygen/
-        # python -m awscli s3 cp ./${{ steps.extract_branch.outputs.branch }}.tar.bz2 s3://xgboost-docs/doxygen/ --acl public-read
         gsutil -m cp -R doc_doxygen/* gs://dp-xgboost-docs.sarus.tech/doxygen/
       if: github.ref == 'refs/heads/master' || contains(github.ref, 'refs/heads/release_')
       env:
