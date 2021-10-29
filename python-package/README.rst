@@ -1,5 +1,5 @@
 ======================
-XGBoost Python Package
+DP-XGBoost Python Package
 ======================
 
 |PyPI version|
@@ -7,14 +7,14 @@ XGBoost Python Package
 Installation
 ============
 
-From `PyPI <https://pypi.python.org/pypi/xgboost>`_
+From `PyPI <https://pypi.python.org/pypi/dp-xgboost>`_
 ---------------------------------------------------
 
 For a stable version, install using ``pip``::
 
     pip install xgboost
 
-.. |PyPI version| image:: https://badge.fury.io/py/xgboost.svg
-   :target: http://badge.fury.io/py/xgboost
+.. |PyPI version| image:: https://badge.fury.io/py/dp-xgboost.svg
+   :target: http://badge.fury.io/py/dp-xgboost
 
-For building from source, see `build <https://xgboost.readthedocs.io/en/latest/build.html>`_.
+For building from source, see https://github.com/sarus-tech/dp-xgboost.
