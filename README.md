@@ -1,5 +1,4 @@
 <img src=logo-dp-xgboost.svg width=500/> 
-===========
 
 [![XGBoost-CI](https://github.com/sarus-tech/dp-xgboost/workflows/XGBoost-CI/badge.svg?branch=master)](https://github.com/sarus-tech/dp-xgboost/actions)
 <!-- [![Documentation Status](https://readthedocs.org/projects/xgboost/badge/?version=latest)](https://xgboost.readthedocs.org) -->
