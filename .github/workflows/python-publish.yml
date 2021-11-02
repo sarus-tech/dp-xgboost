@@ -34,12 +34,15 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: python-package/dist/
-  deploy-wheels:
+  deploy-wheels-non-linux:
     runs-on: ${{ matrix.os }}
+    env:
+      TWINE_USERNAME: ${{ __token__ }}
+      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15, windows-latest]
-        python-version: ["3.8"]
+        os: [macos-10.15, windows-latest]
+        python-version: ["3.8", "3.9"]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -68,9 +71,40 @@ jobs:
         cd python-package
         python --version
         python setup.py bdist_wheel
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
+    - name: Upload wheel
+      run: |
+        pip install twine
+        twine upload python-package/dist/*
+  deploy-wheels-manylinux:
+    runs-on: ubuntu-latest
+    container:
+      image: manylinux_2_24_x86_64
+      env:
+        TWINE_USERNAME: ${{ __token__ }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      volumes:
+        - python-package:/python-package
+    steps:
+    - uses: actions/checkout@v2
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: python-package/dist/
+        submodules: 'true'
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        activate-environment: test
+    - name: Display Conda env
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+    - name: Build DP-XGBoost
+      shell: bash -l {0}
+      run: |
+        cd /python-package
+        python --version
+        python setup.py bdist_wheel
+    - name: Upload wheel
+      run: |
+        pip install twine
+        twine upload python-package/dist/*
