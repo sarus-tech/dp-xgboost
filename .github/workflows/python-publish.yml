@@ -56,16 +56,6 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install -y --no-install-recommends ninja-build
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        activate-environment: test
-    - name: Display Conda env
-      shell: bash -l {0}
-      run: |
-        conda info
-        conda list
     - name: Build DP-XGBoost
       shell: bash -l {0}
       run: |
@@ -75,38 +65,29 @@ jobs:
     - name: Upload wheel
       run: |
         pip install twine
-        twine upload python-package/dist/*
+        python -m twine upload python-package/dist/*
   
   deploy-wheels-manylinux:
     runs-on: ubuntu-latest
-    container:
-      image: manylinux_2_24_x86_64
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      volumes:
-        - python-package:/python-package
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: 'true'
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        activate-environment: test
     - name: Display Conda env
       shell: bash -l {0}
       run: |
         conda info
         conda list
     - name: Build DP-XGBoost
+      uses: docker://quay.io/pypa/manylinux_2_24_x86_64:latest
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       shell: bash -l {0}
       run: |
         cd /python-package
         python --version
         python setup.py bdist_wheel
-    - name: Upload wheel
-      run: |
         pip install twine
-        twine upload python-package/dist/*
+        python -m twine upload dist/*
+        
