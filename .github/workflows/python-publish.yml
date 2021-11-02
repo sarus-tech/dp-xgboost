@@ -34,10 +34,11 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: python-package/dist/
+  
   deploy-wheels-non-linux:
     runs-on: ${{ matrix.os }}
     env:
-      TWINE_USERNAME: ${{ __token__ }}
+      TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     strategy:
       matrix:
@@ -75,12 +76,13 @@ jobs:
       run: |
         pip install twine
         twine upload python-package/dist/*
+  
   deploy-wheels-manylinux:
     runs-on: ubuntu-latest
     container:
       image: manylinux_2_24_x86_64
       env:
-        TWINE_USERNAME: ${{ __token__ }}
+        TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       volumes:
         - python-package:/python-package
