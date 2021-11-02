@@ -1,6 +1,6 @@
-======================
+=========================
 DP-XGBoost Python Package
-======================
+=========================
 
 |PyPI version|
 
@@ -8,7 +8,7 @@ Installation
 ============
 
 From `PyPI <https://pypi.python.org/pypi/dp-xgboost>`_
----------------------------------------------------
+------------------------------------------------------
 
 For a stable version, install using ``pip``::
 
