@@ -66,4 +66,26 @@ jobs:
       run: |
         pip install twine
         python -m twine upload python-package/dist/*
+
+  build-wheels-linux:
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+    - name: Build DP-XGBoost
+      uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux2010_x86_64
+      with:
+        python-versions: 'cp36-cp36m cp37-cp37m'
+        build-requirements: 'cmake'
+        package-path: 'python-package'
+    - name: Upload wheel
+      run: |
+        pip install twine
+        python -m twine upload python-package/dist/*
+    
+    
   
