@@ -48,6 +48,10 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: 'true'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Install osx system dependencies
       if: matrix.os == 'macos-10.15'
       run: |
@@ -55,23 +59,13 @@ jobs:
     - name: Install Ubuntu system dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ca-certificates curl gnupg lsb-release
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get install -y ninja-build docker-ce docker-ce-cli containerd.io
-    - name: Build DP-XGBoost Ubuntu
-      if: matrix.os == 'ubuntu-latest'
-      shell: bash -l {0}
-      run: |
-        sudo docker run --rm -v $(pwd):/dp-xgboost quay.io/pypa/manylinux_2_24_x86_64 bash -c "cd /dp-xgboost/python-package; /opt/python/cp38-cp38/bin/pip install cmake; /opt/python/cp38-cp38/bin/python setup.py bdist_wheel"
-    - name: Build DP-XGBoost Others
-      if: matrix.os != 'ubuntu-latest'
-      shell: bash -l {0}
+        sudo apt-get install -y ninja-build
+    - name: Build DP-XGBoost
       run: |
         cd python-package
         python --version
-        python setup.py bdist_wheel
+        pip install wheel
+        python setup.py bdist_wheel --universal
     - name: Upload wheel
       run: |
         pip install twine
