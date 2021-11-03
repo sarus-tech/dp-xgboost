@@ -62,7 +62,7 @@ jobs:
         python --version
         pip install wheel cmake
         python setup.py bdist_wheel
-    - name: Upload wheel
+    - name: Publish wheels to PyPI
       run: |
         pip install twine
         python -m twine upload python-package/dist/*
@@ -79,13 +79,14 @@ jobs:
     - name: Build DP-XGBoost
       uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux2010_x86_64
       with:
-        python-versions: 'cp36-cp36m cp37-cp37m'
+        python-versions: 'cp38-cp38m cp39-cp39m'
         build-requirements: 'cmake'
         package-path: 'python-package'
-    - name: Upload wheel
+    - name: Publish wheels to PyPI
       run: |
         pip install twine
-        python -m twine upload python-package/dist/*
+        twine upload 
+        python -m twine upload python-package/dist/*-manylinux*.whl
     
     
   
