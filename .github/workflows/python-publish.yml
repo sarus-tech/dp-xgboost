@@ -43,7 +43,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-10.15, windows-latest]
-        python-version: ["3.7", "3.8"]
+        python-version: ["3.6", "3.7", "3.8"]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -65,7 +65,7 @@ jobs:
     - name: Publish wheels to PyPI
       run: |
         pip install twine
-        python -m twine upload python-package/dist/*
+        python -m twine upload python-package/dist/* || true
 
   build-wheels-linux:
     runs-on: ubuntu-latest
@@ -85,7 +85,7 @@ jobs:
     - name: Publish wheels to PyPI
       run: |
         pip install twine
-        python -m twine upload python-package/dist/*-manylinux*.whl
+        python -m twine upload python-package/dist/*-manylinux*.whl || true
     
     
   
