@@ -35,14 +35,14 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: python-package/dist/
   
-  deploy-wheels-non-linux:
+  build-wheels:
     runs-on: ${{ matrix.os }}
     env:
       TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     strategy:
       matrix:
-        os: [macos-10.15, windows-latest]
+        os: [macos-10.15, windows-latest, ubuntu-latest]
         python-version: ["3.8", "3.9"]
     steps:
     - uses: actions/checkout@v2
@@ -55,8 +55,18 @@ jobs:
     - name: Install Ubuntu system dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install -y --no-install-recommends ninja-build
-    - name: Build DP-XGBoost
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg lsb-release
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get install -y ninja-build docker-ce docker-ce-cli containerd.io
+    - name: Build DP-XGBoost Ubuntu
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash -l {0}
+      run: |
+        sudo docker run --rm -v $(pwd):/dp-xgboost quay.io/pypa/manylinux_2_24_x86_64 bash -c "cd /dp-xgboost/python-package; /opt/python/cp38-cp38/bin/pip install cmake; /opt/python/cp38-cp38/bin/python setup.py bdist_wheel"
+    - name: Build DP-XGBoost Others
+      if: matrix.os != 'ubuntu-latest'
       shell: bash -l {0}
       run: |
         cd python-package
@@ -67,27 +77,3 @@ jobs:
         pip install twine
         python -m twine upload python-package/dist/*
   
-  deploy-wheels-manylinux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'true'
-    - name: Display Conda env
-      shell: bash -l {0}
-      run: |
-        conda info
-        conda list
-    - name: Build DP-XGBoost
-      uses: docker://quay.io/pypa/manylinux_2_24_x86_64:latest
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      shell: bash -l {0}
-      run: |
-        cd /python-package
-        python --version
-        python setup.py bdist_wheel
-        pip install twine
-        python -m twine upload dist/*
-        
