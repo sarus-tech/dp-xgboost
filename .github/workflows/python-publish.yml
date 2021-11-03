@@ -15,6 +15,9 @@ on:
 jobs:
   deploy-sdist:
     runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -28,12 +31,10 @@ jobs:
         cd python-package
         python --version
         python setup.py sdist
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: python-package/dist/
+    - name: Publish source to PyPI
+      run: |
+        pip install twine
+        python -m twine upload python-package/dist/* || true
   
   build-wheels-non-linux:
     runs-on: ${{ matrix.os }}
