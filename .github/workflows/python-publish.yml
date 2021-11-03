@@ -85,7 +85,6 @@ jobs:
     - name: Publish wheels to PyPI
       run: |
         pip install twine
-        twine upload 
         python -m twine upload python-package/dist/*-manylinux*.whl
     
     
