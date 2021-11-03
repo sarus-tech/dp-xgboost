@@ -1,7 +1,7 @@
 <img src=logo-dp-xgboost.svg width=500/> 
 
-[![XGBoost-CI](https://github.com/sarus-tech/dp-xgboost/workflows/XGBoost-CI/badge.svg?branch=master)](https://github.com/sarus-tech/dp-xgboost/actions)
-<!-- [![Documentation Status](https://readthedocs.org/projects/xgboost/badge/?version=latest)](https://xgboost.readthedocs.org) -->
+[![DP-XGBoost-CI](https://github.com/sarus-tech/dp-xgboost/workflows/DP-XGBoost-CI/badge.svg?branch=master)](https://github.com/sarus-tech/dp-xgboost/actions)
+[![Publish-Python-Package](https://github.com/sarus-tech/dp-xgboost/workflows/Publish-Python-Package/badge.svg?branch=master)](https://github.com/sarus-tech/dp-xgboost/actions)
 ![PyPI](https://img.shields.io/pypi/v/dp-xgboost)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dp-xgboost)
 ![Twitter Follow](https://img.shields.io/twitter/follow/Sarus_tech?style=social)
