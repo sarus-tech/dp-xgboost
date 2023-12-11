@@ -8,17 +8,14 @@
 
 # What is Sarus DP-XGBoost?
 
-This is a fork of [XGBoost](https://github.com/dmlc/xgboost/tree/master/) that aims at adding differential-privacy to gradient boosted trees.
+This is a fork of [XGBoost](https://github.com/dmlc/xgboost) that aims at adding differential-privacy to gradient boosted trees.
 
 A detailed explanation of the theory and methods used can be found in:
 [Grislain, Nicolas and Joan Gonzalvez. “DP-XGBoost: Private Machine Learning at Scale.” (2021).](https://arxiv.org/abs/2110.12770).
 
 # Quick Start
 
-
-
 # Installing Sarus XGBoost
-
 
 # Usage
 
@@ -38,11 +35,9 @@ The privacy queries used during training are stored in the model and accessible 
 
 Note that the total privacy consumption of the boosted trees is given by:
 
-<img src="https://render.githubusercontent.com/render/math?math=n \log{ \left( 1 %2B \gamma(e^{\epsilon} - 1) \right) }">
+$$n \log{ \left( 1 + \gamma(e^{\epsilon} - 1) \right) }$$
 
-<!-- $ n \log{ \left( 1 + \gamma(e^{\epsilon} - 1) \right) } $ -->
-
-Where <img src="https://render.githubusercontent.com/render/math?math=n"> is the number of trees, <img src="https://render.githubusercontent.com/render/math?math=\gamma"> the subsample fraction (between 0 and 1), and <img src="https://render.githubusercontent.com/render/math?math=\epsilon"> 
+Where $n$ is the number of trees, $\gamma$ the subsample fraction (between 0 and 1), and $\epsilon$
 is the budget per tree. You can refer to our explaining article in `doc/sarus` for more details on privacy consumption. 
 
 # Differential Privacy in the C++ library
@@ -64,14 +59,20 @@ To use with Spark, please follow https://xgboost.readthedocs.io/en/latest/jvm/xg
 This should build the jars `xgboost4j` and `xgboost4j-spark` which will then be passed to
 `spark-submit`. The `sarus/spark` folder contains an example of Spark project in Scala with a POM file that should compile and launch Sarus XGBoost with 2 workers.
 
-# Developper guide
+# Developer guide
 
-Don't forget to `git submodule init` and `git submodule update` after cloning this repo to initialize the XGBoost submodules (e.g. dmlc). 
+1. Get the submodules (s.a. dmlc)
 
-Build tools needed: `cmake`, `g++` and `libomp` which can be installed with `brew` or your favourite package manager. The following commands will setup the build config:
+ ```shell
+ git submodule sync
+ git submodule update --init --recursive
+ ```
 
-```bash
-mkdir build
-cd build
-cmake ..
-```
+2. (Optional) Install prerequisites (s.a. `cmake`, `g++`, `libomp`
+3. Build
+
+ ```shell
+ mkdir build
+ cd build
+ cmake ..
+ ```
