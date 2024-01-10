@@ -15,7 +15,13 @@ A detailed explanation of the theory and methods used can be found in:
 
 # Quick Start
 
-# Installing Sarus XGBoost
+You can start using `dp-xgboost` with the [following notebook](https://colab.research.google.com/github/sarus-tech/dp-xgboost/blob/master/sarus/python/DP_XGBoost_Getting_Started.ipynb).
+Other Python examples which build a DP model are given in `sarus/python/`.
+
+# Installing Sarus DP-XGBoost
+
+To install DP-XGBoost simply run:
+`pip install dp-xgboost`
 
 # Usage
 
