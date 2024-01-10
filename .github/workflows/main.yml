@@ -67,7 +67,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-10.15, windows-latest]
+        os: [ubuntu-latest, macos-10.15]
         python-version: ["3.8"]
     steps:
     - uses: actions/checkout@v2
@@ -150,7 +150,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [windows-latest, ubuntu-latest]
         os: [ubuntu-latest]
 
     steps:
@@ -214,109 +213,3 @@ jobs:
       if: matrix.os == 'ubuntu-latest'  # Distributed training doesn't work on Windows
       env:
         RABIT_MOCK: ON
-
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   name: Code linting for Python and C++
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: 'true'
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: '3.8'
-  #       architecture: 'x64'
-  #   - name: Install Python packages
-  #     run: |
-  #       python -m pip install wheel setuptools
-  #       python -m pip install pylint cpplint numpy scipy scikit-learn
-  #   - name: Run lint
-  #     run: |
-  #       make lint
-
-  mypy:
-    runs-on: ubuntu-latest
-    name: Type checking for Python
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'true'
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
-    - name: Install Python packages
-      run: |
-        python -m pip install wheel setuptools mypy pandas dask[complete] distributed
-    - name: Run mypy
-      run: |
-        make mypy
-
-  doxygen:
-    runs-on: ubuntu-latest
-    name: Generate C/C++ API doc using Doxygen
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'true'
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
-    - name: Install system packages
-      run: |
-        sudo apt-get install -y --no-install-recommends doxygen graphviz ninja-build
-        python -m pip install wheel setuptools
-        python -m pip install awscli
-    - name: Authenticate on GCS
-      uses: google-github-actions/setup-gcloud@master
-      with:
-        version: '270.0.0'
-        service_account_email: ${{ secrets.GKE_EMAIL }}
-        service_account_key: ${{ secrets.GKE_KEY }}
-    - name: Run Doxygen
-      run: |
-        mkdir build
-        cd build
-        cmake .. -DBUILD_C_DOC=ON -GNinja
-        ninja -v doc_doxygen
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-      if: github.ref == 'refs/heads/master' || contains(github.ref, 'refs/heads/release_')
-    - name: Publish
-      run: |
-        cd build/
-        gsutil -m cp -R doc_doxygen/* gs://dp-xgboost-docs.sarus.tech/doxygen/
-      if: github.ref == 'refs/heads/master' || contains(github.ref, 'refs/heads/release_')
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_IAM_S3_UPLOADER }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_IAM_S3_UPLOADER }}
-
-  sphinx:
-    runs-on: ubuntu-latest
-    name: Build docs using Sphinx
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'true'
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-        architecture: 'x64'
-    - name: Install system packages
-      run: |
-        sudo apt-get install -y --no-install-recommends graphviz
-        python -m pip install wheel setuptools
-        python -m pip install -r doc/requirements.txt
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-      if: github.ref == 'refs/heads/master' || contains(github.ref, 'refs/heads/release_')
-    - name: Run Sphinx
-      run: |
-        make -C doc html
-      env:
-        SPHINX_GIT_BRANCH: ${{ steps.extract_branch.outputs.branch }}
